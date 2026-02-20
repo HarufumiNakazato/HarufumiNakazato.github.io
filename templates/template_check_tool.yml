@@ -1,0 +1,1010 @@
+# =============================================================================
+# テンプレート: 書面チェックツール
+# =============================================================================
+# パターン: 正常系 + 失敗系(fail-branch) の2パス構成
+#
+# 正常系: Start → PE → HTTP(ファイル取得) → Tool(PDF→PNG) → LLM(チェック)
+#         → LLM(差戻しコメントID) → LLM(チェック項目ID) → Code(結合) → End
+#
+# 失敗系: HTTP失敗 → LLM(未添付結果) → LLM(差戻しコメントID)
+#         → LLM(チェック項目ID) → Code(結合) → End
+#
+# 用途:   ファイルを取得して内容チェックし、判定IDを特定するツール
+# 適用例: 注文書チェック、見積書チェック、請求書チェック
+# =============================================================================
+# ★カスタマイズ箇所は「# ★カスタマイズ:」コメントで示しています。
+# サンプル値は書面審査業務のものです。自業務の値に差し替えてください。
+# =============================================================================
+app:
+  description: ''
+  icon: "\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_注文書チェックツール  # ★カスタマイズ: ツール名
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: kalochin/pdf_process:1.0.0@052e5c10b080c86e949055c64575647737c2e14947b0b1bc87a44d1c6ed0f1de  # ★カスタマイズ: ファイル処理プラグイン
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b  # ★カスタマイズ: LLMプロバイダー
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - remote_url
+      - local_file
+      enabled: true
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    # ===== 正常系パス =====
+    # Tool(PDF→PNG) → LLM(チェック)
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: llm
+      id: 1759905531065-source-1759465512279-target
+      selected: false
+      source: '1759905531065'
+      sourceHandle: source
+      target: '1759465512279'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # HTTP → Tool(PDF→PNG) [正常系]
+    - data:
+        isInLoop: false
+        sourceType: http-request
+        targetType: tool
+      id: 1760411444840-source-1759905531065-target
+      selected: false
+      source: '1760411444840'
+      sourceHandle: source
+      target: '1759905531065'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # PE → HTTP
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: http-request
+      id: 1765860546708-source-1760411444840-target
+      selected: false
+      source: '1765860546708'
+      sourceHandle: source
+      target: '1760411444840'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # Start → PE
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: parameter-extractor
+      id: 1759465438674-source-1765860546708-target
+      selected: false
+      source: '1759465438674'
+      sourceHandle: source
+      target: '1765860546708'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(チェック項目ID) → Code(結合) [正常系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1768819179219-source-1768819327162-target
+      selected: false
+      source: '1768819179219'
+      sourceHandle: source
+      target: '1768819327162'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # Code(結合) → End [正常系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1768819327162-source-1759465653421-target
+      selected: false
+      source: '1768819327162'
+      sourceHandle: source
+      target: '1759465653421'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(チェック) → LLM(差戻しコメントID) [正常系]
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1759465512279-source-1768818680635-target
+      source: '1759465512279'
+      sourceHandle: source
+      target: '1768818680635'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(差戻しコメントID) → LLM(チェック項目ID) [正常系]
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1768818680635-source-1768819179219-target
+      source: '1768818680635'
+      sourceHandle: source
+      target: '1768819179219'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # ===== 失敗系パス (fail-branch) =====
+    # HTTP失敗 → LLM(未添付結果)
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: llm
+      id: 1760411444840-fail-branch-1771224140521-target
+      source: '1760411444840'
+      sourceHandle: fail-branch
+      target: '1771224140521'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(未添付) → LLM(差戻しコメントID) [失敗系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1771224140521-source-1771224318765-target
+      source: '1771224140521'
+      sourceHandle: source
+      target: '1771224318765'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(差戻しコメントID) → LLM(チェック項目ID) [失敗系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: llm
+      id: 1771224318765-source-1771224442544-target
+      source: '1771224318765'
+      sourceHandle: source
+      target: '1771224442544'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM(チェック項目ID) → Code(結合) [失敗系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1771224442544-source-1771224489626-target
+      source: '1771224442544'
+      sourceHandle: source
+      target: '1771224489626'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # Code(結合) → End [失敗系]
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: code
+        targetType: end
+      id: 1771224489626-source-1771224547675-target
+      source: '1771224489626'
+      sourceHandle: source
+      target: '1771224547675'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    # -----------------------------------------------------------------------
+    # ノード: 開始
+    # -----------------------------------------------------------------------
+    - data:
+        desc: ''
+        selected: false
+        title: 開始
+        type: start
+        variables:
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - image
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: prompt
+          max_length: 50000
+          options: []
+          required: false
+          type: paragraph
+          variable: prompt
+      height: 108
+      id: '1759465438674'
+      position:
+        x: 0
+        y: 10
+      positionAbsolute:
+        x: 0
+        y: 10
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    # -----------------------------------------------------------------------
+    # ノード: パラメータ抽出 (URL抽出)
+    # -----------------------------------------------------------------------
+    - data:
+        instruction: '{{#1759465438674.prompt#}}を参照し、**注文書の署名付きURL**を抜き出してください。'  # ★カスタマイズ: 抽出対象のURL説明
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini  # ★カスタマイズ: モデル名
+          provider: langgenius/azure_openai/azure_openai  # ★カスタマイズ: プロバイダー
+        parameters:
+        - description: URLです  # ★カスタマイズ: パラメータ説明
+          name: presigned_url  # ★カスタマイズ: パラメータ名
+          required: false
+          type: string
+        - description: '後続処理で必要となる、下記の形式の文字列です。"{}"は変数であることを示すために記述しており、実際の値には含まれません。{契約ID}: {カンマ区切りのデータ}'  # ★カスタマイズ
+          name: ffm_data  # ★カスタマイズ
+          required: false
+          type: string
+        query:
+        - '1759465438674'
+        - prompt
+        reasoning_mode: prompt
+        selected: false
+        title: パラメータ抽出
+        type: parameter-extractor
+        vision:
+          enabled: false
+      height: 87
+      id: '1765860546708'
+      position:
+        x: 342
+        y: 20
+      positionAbsolute:
+        x: 342
+        y: 20
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード: HTTPリクエスト (ファイル取得)
+    # fail-branch 対応: ファイル取得失敗時は失敗系パスへ分岐
+    # -----------------------------------------------------------------------
+    - data:
+        authorization:
+          config: null
+          type: no-auth
+        body:
+          data: []
+          type: none
+        desc: ''
+        error_strategy: fail-branch
+        headers: ''
+        method: get
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTP リクエスト
+        type: http-request
+        url: '{{#1765860546708.presigned_url#}}'
+        variables: []
+      height: 158
+      id: '1760411444840'
+      position:
+        x: 683
+        y: 0
+      positionAbsolute:
+        x: 683
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード: PDF to PNG Converter ※汎用パターン
+    # -----------------------------------------------------------------------
+    - data:
+        default_value:
+        - key: text
+          type: string
+          value: ''
+        - key: json
+          type: array[object]
+          value: '[]'
+        desc: ''
+        error_strategy: default-value
+        is_team_authorization: true
+        output_schema: null
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: PDF file to convert to PNG images
+            ja_JP: PDF file to convert to PNG images
+            pt_BR: PDF file to convert to PNG images
+            zh_Hans: 要转换为PNG图片的PDF文件
+          label:
+            en_US: PDF Content
+            ja_JP: PDF Content
+            pt_BR: PDF Content
+            zh_Hans: PDF 内容
+          llm_description: PDF file content to be converted to PNG images
+          max: null
+          min: null
+          name: pdf_content
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: file
+        - auto_generate: null
+          default: 2
+          form: llm
+          human_description:
+            en_US: Zoom factor for image quality (default is 2)
+            ja_JP: Zoom factor for image quality (default is 2)
+            pt_BR: Zoom factor for image quality (default is 2)
+            zh_Hans: 图像质量的缩放因子（默认为2）
+          label:
+            en_US: Zoom Factor
+            ja_JP: Zoom Factor
+            pt_BR: Zoom Factor
+            zh_Hans: 缩放因子
+          llm_description: Zoom factor to control the quality of output PNG images
+          max: null
+          min: null
+          name: zoom
+          options: []
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: number
+        params:
+          pdf_content: ''
+          zoom: ''
+        provider_id: kalochin/pdf_process/pdf_process  # ★カスタマイズ: ファイル変換プラグイン
+        provider_name: kalochin/pdf_process/pdf_process
+        provider_type: builtin
+        selected: false
+        title: PDF to PNG Converter  # ★カスタマイズ: ノードタイトル
+        tool_configurations: {}
+        tool_description: A tool for converting PDF files to PNG images
+        tool_label: PDF to PNG Converter
+        tool_name: pdf_to_png
+        tool_node_version: '2'
+        tool_parameters:
+          pdf_content:
+            type: variable
+            value:
+            - '1760411444840'
+            - files
+          zoom:
+            type: constant
+            value: 2
+        type: tool
+      height: 87
+      id: '1759905531065'
+      position:
+        x: 1024
+        y: 18
+      positionAbsolute:
+        x: 1024
+        y: 18
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # =======================================================================
+    # ===== 正常系: LLMチェーン (チェック → 差戻しコメントID → チェック項目ID) =====
+    # =======================================================================
+    # -----------------------------------------------------------------------
+    # 正常系 LLM1: 書面チェック (Vision)
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7  # ★カスタマイズ: temperature
+          mode: chat
+          name: gpt-4.1-mini  # ★カスタマイズ: モデル名
+          provider: langgenius/azure_openai/azure_openai  # ★カスタマイズ: プロバイダー
+        prompt_template:
+        - id: d7717af8-4219-4fd9-87c6-de83e1cb53d1
+          role: system
+          # =================================================================
+          # ★カスタマイズ: チェックプロンプト全体を自業務に合わせて書き換え
+          # 構造:
+          #   1. 入力データスキーマの説明
+          #   2. チェック観点のリスト
+          #   3. 業務ルール
+          #   4. 出力フォーマット指定
+          # =================================================================
+          text: "※出力は必ず日本語のみで行い、中国語・英語の語彙は使用しない。\n\nあなたに共有した画像は発注書です。\n\n{{#1759465438674.prompt#}}は発注書の内容が正しいことを確認するための突合用データです。\n\
+            {{#1759465438674.prompt#}}は下記のような構造になっていますので、対応する値を参照してください。\n\n{\n  \
+            \  \"契約書一覧照会\": [\n        {\n            \"契約書名\": \"{value}\"\n    \
+            \\    }\n    ],\n    \"基本情報タブ\": {\n        \"契約者（甲）お客様名（書面用）\": \"{value}\"\
+            ,\n        \"契約者（甲）お客様名\": \"{value}\",\n        \"契約者（甲）住所\": \"{value}\"\
+            ,\n        \"契約者（甲）氏名\": \"{value}\",\n        \"契約者（乙）住所\": \"{value}\"\
+            ,\n        \"契約者（乙）会社名（書面用）\": \"{value}\",\n        \"契約者（乙）組織名\": \"\
+            {value}\",\n        \"契約者（乙）役職\": \"{value}\",\n        \"契約者（乙）契約者氏名\"\
+            : \"{value}\",\n        \"契約者（乙）担当者氏名\": \"{value}\"\n    },\n    \"取引明細タブ\"\
+            : [\n        {\n            \"NO.\": \"{value}\",\n            \"商品名\"\
+            : \"{value}\",\n            \"商品コード\": \"{value}\",\n            \"数量\"\
+            : \"{value}\",\n            \"税抜金額（円）\": \"{value}\"\n        }\n    ],\n\
+            \\    \"回収条件・請求先情報\": {\n        \"商品明細一覧\": [\n            {\n       \
+            \\         \"回収条件NO.\": \"{value}\",\n                \"回収条件\": {\n   \
+            \\                 \"回収条件NO.\": \"{value}\",\n                    \"請求先名\"\
+            : \"{value}\"\n                },\n                \"支払区分\": {\n     \
+            \\               \"支払区分\": \"{value}\",\n                    \"支払方法\":\
+            \\ \"{value}\",\n                    \"支払期日\": \"{value}\"\n          \
+            \\      }\n            }\n        ]\n    },\n    \"ファイル情報\": [\n\\t{\n\\t\
+            \\        \"署名付きURL\": \"{value}\",\n\\t        \"画像ファイル名\": \"{value}\"\
+            \\n\\t}\n    ],\n    \"契約番号\": \"{value}\",\n    \"案件番号\": \"{value}\",\n\
+            \\    \"基本契約\": \"{value}\",\n    \"契約締結日（注文日）\": \"{value}\"\n}\n\n発注書の画像を確認して、下記の観点で各項目を確認してください。\n\
+            \\n・\"■書面種別判定結果\"に記載されている書面種別に\"注文書\"が含まれていない場合、\"添付書類相違\"でNG。\n\n・\"■書面種別判定結果\"\
+            に記載されている結果が\"書面未添付\"の場合、\\\"書面未添付\\\"でNG。\n\n**\\\"書面未添付\\\"もしくは\\\"添付書面相違\\\"の場合、以下のチェックは実施しないでください**\n\
+            **チェックを実施しないことの報告は不要です**\n\n・契約日（注文日）: 発注書画像の日付と一致しているか。発注書画像に注文日が未記載の場合はNG。\n\
+            ・受注企業名: 発注書画像について、企業名が省略されず記載されており、突合用データと一致しているか\n・品目: 発注書画像について、品目が明記されており、突合用データと一致しているか。また、白物家電の場合は販売不可なので、品目が白物家電にあたらないこと。\n\
+            ・数量: 発注書画像について、数量が明記されており、突合用データと一致しているか\n・発注金額: 発注書画像について、発注金額が明記されており、突合用データと一致しているか。基本契約なしかつ受注額100万円以上の場合はNG。金額が一致していない場合もNG。\n\
+            ・押印: 取引先の押印がされているか。されていればOK、されていなければNG\n・担当者名: **社判を押印した企業の担当者名**がフルネームで記載されていること。フルネームでなければNG。**社判を押印していない企業の担当者名**についてはチェック不要。\n\
+            \\nただし、契約番号については突合不要です。\n\n**差戻し事項があると判断した場合は、その点について必ずファクトチェックを実施してください。**\n\
+            \\n確認結果は下記のフォーマットで出力してください。\n\n承認の際は、\\\"概ね問題ない\\\"では足りず、\\\"完全に問題ない\\\"ことが必要です。\n\
+            \\\"問題あり\\\"か\\\"問題なし\\\"かの二択に限られることに注意してください。\n特に、突合時において少しでも差異がある場合、NGとしてください。\n\
+            \\n---------------------------------------------------------\n■ ツール実行結果\n\
+            ・正常終了の場合は\\\"SUCCESS\\\"、異常終了の場合は\\\"FAILED\\\"を出力\n\n■ 注文書チェック結果\n各項目を箇条書きにして、比較した値を明示したうえで相違の有無を出力してください。\n\
+            NGの場合、その理由を明記してください。"
+        selected: false
+        title: 発注書チェック  # ★カスタマイズ: ノードタイトル
+        type: llm
+        variables: []
+        vision:
+          configs:
+            detail: high
+            variable_selector:
+            - '1759905531065'
+            - files
+          enabled: true  # Vision有効 (画像チェック用)
+      height: 87
+      id: '1759465512279'
+      position:
+        x: 1365
+        y: 0
+      positionAbsolute:
+        x: 1365
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 正常系 LLM2: 差戻しコメントID判定
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini
+          provider: langgenius/azure_openai/azure_openai
+        prompt_template:
+        - id: 3289fbd9-fc10-4bc4-ade8-90e33b23d57d
+          role: system
+          # ★カスタマイズ: 差戻しコメントID一覧とフロー種別マッピングを自業務に合わせて書き換え
+          text: "下記は、差戻しコメントと、そのコメントに割り振られたIDの対応リストです。\n\n\
+            {{#1759465512279.text#}}は注文書チェックの結果です。\n\n\
+            注文書チェックの結果が差戻しである場合、差戻しの理由に対応する差戻しコメントをリストから探し、**ID**を出力してください。\n\n\
+            また、フロー種別判定フラグとして、IDが1,2,3,4,5,6,12のいずれかの場合は\"document_check\"という文字列を併せて出力してください。\n\
+            IDが7,8,9,10,11のいずれかの場合は\"data_verification\"という文字列を出力してください。\n\n\
+            以下のフォーマットを遵守してください。\n\
+            複数ある場合は、その数の分だけ下記フォーマットを繰り返して出力してください。\n\n\
+            ------------------------------------------------------\n\
+            ■差戻しコメントID\n・ID\n・フロー種別判定フラグ\n・NGと判断された理由\n\
+            ------------------------------------------------------\n\n\
+            **その他の文字列は出力しないでください。**\n\n\
+            注文書チェックの結果が承認である場合は何も出力しないでください。\n\n\
+            1:書面が未添付です。添付いただき、再申請して下さい。\n\
+            2:注文書の(控)・(仮)が添付されていますので、「手配可の差戻し」とします。正式な注文書を入手次第、再申請して下さい。\n\
+            3:広域・ＢＰ業務Ｇ（広域顧客営業協力制度担当）の正式な納入依頼書が未添付です。添付いただき、再申請して下さい。\n\
+            4:「手配可の差戻し」としますが、○○を入手次第、再申請して下さい。\n\
+            5:【地紋印刷画像】\n\
+            6:起案書DBリンクがされておりません。Notesの起案書DBリンクを審査データへ添付して、審査依頼をして下さい。\n\
+            7:注文書に『注文日』が未記載です。再申請頂く際は記載頂いた日付とＶ－ＵＰデータ契約締結日（注文日）が一致している事を確認して下さい。\n\
+            8:注文書の『お客様会社名』が未記載です。記載していただき、再申請して下さい。\n\
+            9:注文書の『お客様氏名の欄』が未記載です。決裁権限者・ご担当者の氏名を『フルネーム』で記載していただき、再申請して下さい。\n\
+            10:注文書にお客様捺印(代表者印/個人印)がありません。押印していただき、再申請して下さい。※シャチハタ印は不可となります。\n\
+            11:分割審査は不可となっております。V-UPデータは注文書通り作成下さい。発注を分けられるようであれば、契約審査完了後に分けて下さい。\n\
+            12:『契約金額』が『注文書』と『V-UPデータ/契約金額』で不一致です。\n\
+            13:『単価金額』が『注文書』と『V-UPデータ/金額』で不一致です。\n\
+            14:注文書とV-UPデータの『お客様名』が不一致です。（データの「請求先名」は『○○○』です）\n\
+            15:書面とV-UPデータの商品明細が不一致です。\n\
+            16:商品の一致が確認出来ません。同一商品で間違い無いようであればV-UPコメント欄に「同一商品です」と入力いただき再度審査をご依頼下さい。\n\
+            17:代替・終息コメントにより、「手配可の差戻し」としますが、売上までに契約書面を取り直し、もしくは訂正いただき、再申請して下さい。\n\
+            18:数量が、『注文書』と『V-UPデータ』で不一致です。\n\
+            19:『支払条件（期日/方法）』が、『注文書』と『V-UP回収条件/支払条件（期日/方法）』で不一致です。\n\
+            20:V-UP回収条件が未入力です。入力いただき、再申請して下さい。\n\
+            21:基本契約「無」ユーザーです。売買契約書を取得し、『売買契約書』表紙で再申請して下さい。\n"
+        selected: false
+        title: 差戻しコメントID判定
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1768818680635'
+      position:
+        x: 1726
+        y: 18
+      positionAbsolute:
+        x: 1726
+        y: 18
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 正常系 LLM3: チェック項目ID判定
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini
+          provider: langgenius/azure_openai/azure_openai
+        prompt_template:
+        - id: 10a01689-abd8-4f4e-8db6-b239ab28b223
+          role: system
+          # ★カスタマイズ: チェック項目ID一覧とフロー種別マッピングを自業務に合わせて書き換え
+          text: "下記は、チェック項目と、そのチェック項目に割り振られたIDの対応リストです。\n\n\
+            {{#1759465512279.text#}}は注文書チェックの結果です。\n\n\
+            注文書チェックの結果が差戻しである場合、差戻しの理由に対応するチェック項目をリストから探し、**ID**を出力してください。\n\n\
+            また、フロー種別判定フラグとして、IDが下記の場合は\"document_check\"という文字列を出力してください。\n\
+            ・1\n・2\n・3\n・4\n・5\n・6\n・12\n\n\
+            IDが下記の場合は、\"data_verification\"という文字列を出力してください。\n\
+            ・7\n・8\n・9\n・10\n・11\n\n\
+            出力の際は以下のフォーマットを遵守してください。\n\n\
+            ------------------------------------------------------\n\
+            ■チェック項目ID\n・ID\n・フロー種別判定フラグ\n・NGと判断された理由\n\
+            ------------------------------------------------------\n\n\
+            **その他の文字列は出力しないでください。**\n\n\
+            注文書チェックの結果が承認である場合は何も出力しないでください。\n\n\
+            1: \"書面未着：添付書面不備\"\n\
+            2: \"書面未着：表紙不備\"\n\
+            3: \"書面：注文日-無/不備\"\n\
+            4: \"書面：甲)会社名（EU）-不備\"\n\
+            5: \"書面：甲)役職者名or担当者名-無\"\n\
+            6: \"書面：お客様契約印-不備\"\n\
+            7: \"ﾃﾞｰﾀ不一致：契約金額(税抜)\"\n\
+            8: \"ﾃﾞｰﾀ不一致：甲)会社名(EU)\"\n\
+            9: \"ﾃﾞｰﾀ不一致：(明細)商品名\"\n\
+            10: \"ﾃﾞｰﾀ不一致：数量\"\n\
+            11: \"ﾃﾞｰﾀ不一致：支払条件\"\n\
+            12: \"100万円以上：注文書受注不可\""
+        selected: false
+        title: チェック項目ID判定
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1768819179219'
+      position:
+        x: 2068.4285714285716
+        y: 20
+      positionAbsolute:
+        x: 2068.4285714285716
+        y: 20
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 正常系 Code: 結果結合 ※汎用パターン - 通常変更不要
+    # -----------------------------------------------------------------------
+    - data:
+        code: "\ndef main(doc_check_result: str, return_comment_id: str, check_list_id:\
+          \ str):\n    return {\n        \"result\": doc_check_result + return_comment_id\
+          \ + check_list_id\n    }\n"
+        code_language: python3
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: コード実行
+        type: code
+        variables:
+        - value_selector:
+          - '1759465512279'
+          - text
+          value_type: string
+          variable: doc_check_result
+        - value_selector:
+          - '1768818680635'
+          - text
+          value_type: string
+          variable: return_comment_id
+        - value_selector:
+          - '1768819179219'
+          - text
+          value_type: string
+          variable: check_list_id
+      height: 51
+      id: '1768819327162'
+      position:
+        x: 2408
+        y: 33
+      positionAbsolute:
+        x: 2408
+        y: 33
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 正常系 End
+    # -----------------------------------------------------------------------
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1768819327162'
+          - result
+          value_type: string
+          variable: result
+        selected: false
+        title: 終了
+        type: end
+      height: 87
+      id: '1759465653421'
+      position:
+        x: 2749
+        y: 15
+      positionAbsolute:
+        x: 2749
+        y: 15
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # =======================================================================
+    # ===== 失敗系: ファイル未添付時の処理 (fail-branch) =====
+    # 正常系と同じ LLMチェーン構造だが、チェック結果が「書類未添付」固定
+    # =======================================================================
+    # -----------------------------------------------------------------------
+    # 失敗系 LLM1: 書面未添付結果生成
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini
+          provider: langgenius/azure_openai/azure_openai
+        prompt_template:
+        - id: e48f7d18-9555-41d9-b6d8-c4d5a791f7be
+          role: system
+          # ★カスタマイズ: 書面未添付時の固定出力を自業務に合わせて変更
+          text: "下記の文字列を出力してください。\n\n\
+            ---------------------------------------------------------\n\
+            ■ ツール実行結果\n\
+            ・正常終了の場合は\"SUCCESS\"、異常終了の場合は\"FAILED\"を出力\n\n\
+            ■ 注文書チェック結果\n\
+            書類未添付"
+        selected: false
+        title: 発注書チェック
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1771224140521'
+      position:
+        x: 1024
+        y: 144
+      positionAbsolute:
+        x: 1024
+        y: 144
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 失敗系 LLM2: 差戻しコメントID判定 (正常系と同じプロンプト構造)
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini
+          provider: langgenius/azure_openai/azure_openai
+        prompt_template:
+        - id: 918b9dfd-cad1-4e59-ae67-9f3fa0d8893f
+          role: system
+          # ★カスタマイズ: 正常系LLM2と同じ差戻しコメントID一覧を設定
+          text: "下記は、差戻しコメントと、そのコメントに割り振られたIDの対応リストです。\n\n\
+            {{#1771224140521.text#}}は注文書チェックの結果です。\n\n\
+            注文書チェックの結果が差戻しである場合、差戻しの理由に対応する差戻しコメントをリストから探し、**ID**を出力してください。\n\n\
+            また、フロー種別判定フラグとして、IDが1,2,3,4,5,6,12のいずれかの場合は\"document_check\"という文字列を併せて出力してください。\n\
+            IDが7,8,9,10,11のいずれかの場合は\"data_verification\"という文字列を出力してください。\n\n\
+            以下のフォーマットを遵守してください。\n\
+            複数ある場合は、その数の分だけ下記フォーマットを繰り返して出力してください。\n\n\
+            ------------------------------------------------------\n\
+            ■差戻しコメントID\n・ID\n・フロー種別判定フラグ\n・NGと判断された理由\n\
+            ------------------------------------------------------\n\n\
+            **その他の文字列は出力しないでください。**\n\n\
+            注文書チェックの結果が承認である場合は何も出力しないでください。\n\n\
+            1:書面が未添付です。添付いただき、再申請して下さい。\n\
+            2:注文書の(控)・(仮)が添付されていますので、「手配可の差戻し」とします。正式な注文書を入手次第、再申請して下さい。\n\
+            3:広域・ＢＰ業務Ｇ（広域顧客営業協力制度担当）の正式な納入依頼書が未添付です。添付いただき、再申請して下さい。\n\
+            4:「手配可の差戻し」としますが、○○を入手次第、再申請して下さい。\n\
+            5:【地紋印刷画像】\n\
+            6:起案書DBリンクがされておりません。Notesの起案書DBリンクを審査データへ添付して、審査依頼をして下さい。\n\
+            7:注文書に『注文日』が未記載です。再申請頂く際は記載頂いた日付とＶ－ＵＰデータ契約締結日（注文日）が一致している事を確認して下さい。\n\
+            8:注文書の『お客様会社名』が未記載です。記載していただき、再申請して下さい。\n\
+            9:注文書の『お客様氏名の欄』が未記載です。決裁権限者・ご担当者の氏名を『フルネーム』で記載していただき、再申請して下さい。\n\
+            10:注文書にお客様捺印(代表者印/個人印)がありません。押印していただき、再申請して下さい。※シャチハタ印は不可となります。\n\
+            11:分割審査は不可となっております。V-UPデータは注文書通り作成下さい。発注を分けられるようであれば、契約審査完了後に分けて下さい。\n\
+            12:『契約金額』が『注文書』と『V-UPデータ/契約金額』で不一致です。\n\
+            13:『単価金額』が『注文書』と『V-UPデータ/金額』で不一致です。\n\
+            14:注文書とV-UPデータの『お客様名』が不一致です。（データの「請求先名」は『○○○』です）\n\
+            15:書面とV-UPデータの商品明細が不一致です。\n\
+            16:商品の一致が確認出来ません。同一商品で間違い無いようであればV-UPコメント欄に「同一商品です」と入力いただき再度審査をご依頼下さい。\n\
+            17:代替・終息コメントにより、「手配可の差戻し」としますが、売上までに契約書面を取り直し、もしくは訂正いただき、再申請して下さい。\n\
+            18:数量が、『注文書』と『V-UPデータ』で不一致です。\n\
+            19:『支払条件（期日/方法）』が、『注文書』と『V-UP回収条件/支払条件（期日/方法）』で不一致です。\n\
+            20:V-UP回収条件が未入力です。入力いただき、再申請して下さい。\n\
+            21:基本契約「無」ユーザーです。売買契約書を取得し、『売買契約書』表紙で再申請して下さい。\n"
+        selected: false
+        title: 差戻しコメントID判定
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1771224318765'
+      position:
+        x: 1325
+        y: 144
+      positionAbsolute:
+        x: 1325
+        y: 144
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 失敗系 LLM3: チェック項目ID判定 (正常系と同じプロンプト構造)
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4.1-mini
+          provider: langgenius/azure_openai/azure_openai
+        prompt_template:
+        - id: d3f8cd31-2172-4f1f-93e0-4df1df8d9524
+          role: system
+          # ★カスタマイズ: 正常系LLM3と同じチェック項目ID一覧を設定
+          text: "下記は、チェック項目と、そのチェック項目に割り振られたIDの対応リストです。\n\n\
+            {{#1771224140521.text#}}は注文書チェックの結果です。\n\n\
+            注文書チェックの結果が差戻しである場合、差戻しの理由に対応するチェック項目をリストから探し、**ID**を出力してください。\n\n\
+            また、フロー種別判定フラグとして、IDが下記の場合は\"document_check\"という文字列を出力してください。\n\
+            ・1\n・2\n・3\n・4\n・5\n・6\n・12\n\n\
+            IDが下記の場合は、\"data_verification\"という文字列を出力してください。\n\
+            ・7\n・8\n・9\n・10\n・11\n\n\
+            出力の際は以下のフォーマットを遵守してください。\n\n\
+            ------------------------------------------------------\n\
+            ■チェック項目ID\n・ID\n・フロー種別判定フラグ\n・NGと判断された理由\n\
+            ------------------------------------------------------\n\n\
+            **その他の文字列は出力しないでください。**\n\n\
+            注文書チェックの結果が承認である場合は何も出力しないでください。\n\n\
+            1: \"書面未着：添付書面不備\"\n\
+            2: \"書面未着：表紙不備\"\n\
+            3: \"書面：注文日-無/不備\"\n\
+            4: \"書面：甲)会社名（EU）-不備\"\n\
+            5: \"書面：甲)役職者名or担当者名-無\"\n\
+            6: \"書面：お客様契約印-不備\"\n\
+            7: \"ﾃﾞｰﾀ不一致：契約金額(税抜)\"\n\
+            8: \"ﾃﾞｰﾀ不一致：甲)会社名(EU)\"\n\
+            9: \"ﾃﾞｰﾀ不一致：(明細)商品名\"\n\
+            10: \"ﾃﾞｰﾀ不一致：数量\"\n\
+            11: \"ﾃﾞｰﾀ不一致：支払条件\"\n\
+            12: \"100万円以上：注文書受注不可\""
+        selected: false
+        title: チェック項目ID判定
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1771224442544'
+      position:
+        x: 1626
+        y: 144
+      positionAbsolute:
+        x: 1626
+        y: 144
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 失敗系 Code: 結果結合 ※汎用パターン - 通常変更不要
+    # -----------------------------------------------------------------------
+    - data:
+        code: "\ndef main(doc_check_result: str, return_comment_id: str, check_list_id:\
+          \ str):\n    return {\n        \"result\": doc_check_result + return_comment_id\
+          \ + check_list_id\n    }\n"
+        code_language: python3
+        outputs:
+          result:
+            children: null
+            type: string
+        selected: false
+        title: コード実行 2
+        type: code
+        variables:
+        - value_selector:
+          - '1771224140521'
+          - text
+          value_type: string
+          variable: doc_check_result
+        - value_selector:
+          - '1771224318765'
+          - text
+          value_type: string
+          variable: return_comment_id
+        - value_selector:
+          - '1771224442544'
+          - text
+          value_type: string
+          variable: check_list_id
+      height: 51
+      id: '1771224489626'
+      position:
+        x: 1927
+        y: 144
+      positionAbsolute:
+        x: 1927
+        y: 144
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # 失敗系 End
+    # -----------------------------------------------------------------------
+    - data:
+        outputs:
+        - value_selector:
+          - '1771224489626'
+          - result
+          value_type: string
+          variable: result
+        selected: false
+        title: 終了
+        type: end
+      height: 87
+      id: '1771224547675'
+      position:
+        x: 2228
+        y: 144
+      positionAbsolute:
+        x: 2228
+        y: 144
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: -1226.2692529676874
+      y: 180.0905961543788
+      zoom: 0.6635168205099797
+  rag_pipeline_variables: []

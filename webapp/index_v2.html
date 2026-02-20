@@ -1,0 +1,2828 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dify DSL Builder - BPaaS Agent Template</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1e3a5f;
+  --primary-light:#e8eef6;
+  --primary-dark:#142a47;
+  --link:#2563eb;
+  --link-light:#dbeafe;
+  --dark:#0f172a;
+  --bg:#f8fafc;
+  --white:#ffffff;
+  --gray-50:#f8fafc;
+  --gray-100:#f1f5f9;
+  --gray-200:#e2e8f0;
+  --gray-300:#cbd5e1;
+  --gray-400:#94a3b8;
+  --gray-500:#64748b;
+  --gray-600:#475569;
+  --gray-700:#334155;
+  --gray-800:#1e293b;
+  --gray-900:#0f172a;
+  --green:#059669;
+  --green-light:#d1fae5;
+  --green-dark:#047857;
+  --red:#dc2626;
+  --red-light:#fee2e2;
+  --orange:#d97706;
+  --orange-light:#fef3c7;
+  --blue-50:#eff6ff;
+  --blue-100:#dbeafe;
+  --blue-500:#3b82f6;
+  --radius:12px;
+  --radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.08),0 4px 6px -4px rgba(0,0,0,.04);
+  --shadow-xl:0 20px 25px -5px rgba(0,0,0,.08),0 8px 10px -6px rgba(0,0,0,.04);
+  --transition:all .2s ease;
+}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  background:var(--bg);
+  color:var(--gray-800);
+  line-height:1.6;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== Header ===== */
+.header{
+  background:var(--white);
+  border-bottom:1px solid var(--gray-200);
+  padding:0 32px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.header h1{
+  font-size:17px;
+  font-weight:700;
+  color:var(--dark);
+  letter-spacing:-.02em;
+}
+.header .badge{
+  background:var(--primary-light);
+  color:var(--primary);
+  font-size:11px;
+  padding:3px 10px;
+  border-radius:20px;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+
+/* ===== Stepper ===== */
+.stepper{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:0;
+  padding:28px 24px 0;
+  max-width:640px;
+  margin:0 auto;
+}
+.step-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.step-circle{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:700;
+  border:2px solid var(--gray-300);
+  color:var(--gray-400);
+  background:var(--white);
+  transition:var(--transition);
+  flex-shrink:0;
+}
+.step-item.active .step-circle{
+  border-color:var(--primary);
+  color:var(--white);
+  background:var(--primary);
+}
+.step-item.done .step-circle{
+  border-color:var(--green);
+  color:var(--white);
+  background:var(--green);
+}
+.step-label{
+  font-size:13px;
+  color:var(--gray-400);
+  font-weight:500;
+  transition:color .2s;
+  white-space:nowrap;
+}
+.step-item.active .step-label{color:var(--primary);font-weight:700}
+.step-item.done .step-label{color:var(--green)}
+.step-line{
+  flex:1;
+  height:2px;
+  background:var(--gray-200);
+  margin:0 16px;
+  min-width:32px;
+  transition:background .3s;
+  border-radius:1px;
+}
+.step-line.done{background:var(--green)}
+
+/* ===== Container ===== */
+.container{max-width:960px;margin:0 auto;padding:28px 24px 48px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ===== Cards ===== */
+.card{
+  background:var(--white);
+  border-radius:var(--radius);
+  border:1px solid var(--gray-200);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-top:20px;
+}
+
+/* Category cards */
+.cat-card{
+  cursor:pointer;
+  transition:var(--transition);
+  position:relative;
+}
+.cat-card:hover{
+  border-color:var(--link);
+  box-shadow:var(--shadow-lg);
+  transform:translateY(-2px);
+}
+.cat-card .cat-header{
+  padding:24px 24px 14px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.cat-card .cat-icon{
+  font-size:28px;
+  line-height:1;
+  width:52px;
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--gray-50);
+  border-radius:var(--radius);
+  flex-shrink:0;
+}
+.cat-card .cat-title{font-size:16px;font-weight:700;color:var(--gray-900)}
+.cat-card .cat-desc{font-size:13px;color:var(--gray-500);margin-top:3px;line-height:1.5}
+.cat-card .cat-meta{padding:0 24px 18px;display:flex;gap:8px;flex-wrap:wrap}
+.meta-chip{
+  font-size:11px;
+  padding:3px 10px;
+  border-radius:20px;
+  font-weight:600;
+  background:var(--gray-100);
+  color:var(--gray-500);
+}
+.cat-card .cat-footer{
+  border-top:1px solid var(--gray-100);
+  padding:12px 24px;
+  font-size:12px;
+  color:var(--gray-400);
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+/* Template cards */
+.template-card{cursor:pointer;transition:var(--transition);position:relative}
+.template-card:hover{border-color:var(--link);box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.template-card .card-header{padding:24px 24px 14px;display:flex;align-items:flex-start;gap:14px}
+.template-card .card-icon{font-size:32px;line-height:1}
+.template-card .card-title{font-size:16px;font-weight:700;color:var(--gray-900)}
+.template-card .card-desc{font-size:13px;color:var(--gray-500);margin-top:4px;line-height:1.5}
+.template-card .card-body{padding:0 24px 18px}
+.effect-tag{
+  display:inline-block;
+  font-size:11px;
+  padding:3px 10px;
+  border-radius:20px;
+  margin:2px 2px 2px 0;
+  font-weight:600;
+}
+.effect-tag.green{background:var(--green-light);color:var(--green)}
+.effect-tag.orange{background:var(--orange-light);color:var(--orange)}
+.template-card .card-footer{
+  border-top:1px solid var(--gray-100);
+  padding:14px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:12px;
+  color:var(--gray-400);
+}
+.tool-count{font-weight:700;color:var(--link)}
+
+/* Mock */
+.mock-badge{
+  position:absolute;
+  top:14px;
+  right:14px;
+  background:var(--gray-200);
+  color:var(--gray-500);
+  font-size:10px;
+  padding:3px 10px;
+  border-radius:20px;
+  font-weight:700;
+  letter-spacing:.5px;
+}
+.template-card.is-mock,.cat-card.is-mock{opacity:.65}
+.template-card.is-mock:hover,.cat-card.is-mock:hover{transform:none;box-shadow:var(--shadow);border-color:var(--gray-200);cursor:default}
+
+/* Breadcrumb */
+.breadcrumb{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:var(--gray-400);
+  margin-bottom:20px;
+}
+.breadcrumb a{color:var(--link);text-decoration:none;font-weight:600;cursor:pointer}
+.breadcrumb a:hover{text-decoration:underline}
+
+/* Section header */
+.section-header{margin-bottom:24px}
+.section-header h2{font-size:22px;font-weight:700;color:var(--gray-900);letter-spacing:-.02em}
+.section-header p{font-size:14px;color:var(--gray-500);margin-top:6px;line-height:1.6}
+
+/* ===== Buttons ===== */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 22px;
+  border-radius:var(--radius-sm);
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  transition:var(--transition);
+  font-family:inherit;
+  line-height:1.4;
+}
+.btn:hover{box-shadow:var(--shadow-md)}
+.btn-primary{background:var(--primary);color:var(--white)}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:var(--white);color:var(--gray-700);border:1px solid var(--gray-300)}
+.btn-secondary:hover{background:var(--gray-50);border-color:var(--gray-400)}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:hover{background:var(--green-dark)}
+.btn-link{background:none;border:none;color:var(--link);padding:10px 16px;font-weight:600}
+.btn-link:hover{background:var(--blue-50);box-shadow:none}
+.btn-sm{padding:7px 14px;font-size:12px}
+.actions{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--gray-200)}
+
+/* ===== Forms ===== */
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px}
+.form-hint{font-size:12px;color:var(--gray-400);margin-bottom:6px;line-height:1.5}
+input[type="text"],input[type="url"],input[type="number"],textarea,select{
+  width:100%;
+  padding:10px 14px;
+  border:1px solid var(--gray-300);
+  border-radius:var(--radius-sm);
+  font-size:14px;
+  font-family:inherit;
+  transition:border-color .2s,box-shadow .2s;
+  background:var(--white);
+  color:var(--gray-800);
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--link);
+  box-shadow:0 0 0 3px rgba(37,99,235,.1);
+}
+textarea{resize:vertical;min-height:60px}
+
+/* ===== Toggle Switch (iOS-style) ===== */
+.toggle-switch{
+  position:relative;
+  width:44px;
+  height:24px;
+  flex-shrink:0;
+}
+.toggle-switch input{
+  opacity:0;
+  width:0;
+  height:0;
+  position:absolute;
+}
+.toggle-slider{
+  position:absolute;
+  cursor:pointer;
+  top:0;left:0;right:0;bottom:0;
+  background:var(--gray-300);
+  border-radius:24px;
+  transition:background .25s ease;
+}
+.toggle-slider::before{
+  content:'';
+  position:absolute;
+  height:18px;
+  width:18px;
+  left:3px;
+  bottom:3px;
+  background:var(--white);
+  border-radius:50%;
+  transition:transform .25s ease;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.toggle-switch input:checked + .toggle-slider{
+  background:var(--green);
+}
+.toggle-switch input:checked + .toggle-slider::before{
+  transform:translateX(20px);
+}
+
+/* ===== Essential Setup (Step 2a) ===== */
+.essential-panel{padding:32px}
+.criteria-toggle-row{
+  display:flex;
+  gap:14px;
+  padding:14px 0;
+  border-bottom:1px solid var(--gray-100);
+  align-items:flex-start;
+}
+.criteria-toggle-row:last-child{border-bottom:none}
+.criteria-toggle-row .toggle-switch{margin-top:2px}
+.criteria-info{flex:1;min-width:0}
+.criteria-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.criteria-name{
+  font-size:14px;
+  font-weight:600;
+  color:var(--gray-800);
+}
+.criteria-rule{
+  font-size:12px;
+  color:var(--gray-400);
+  line-height:1.5;
+  margin-top:4px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.criteria-toggle-row.disabled .criteria-name{color:var(--gray-400)}
+.criteria-toggle-row.disabled .criteria-rule{color:var(--gray-300)}
+.blocking-badge{
+  font-size:10px;
+  font-weight:700;
+  padding:2px 8px;
+  border-radius:20px;
+  background:var(--red-light);
+  color:var(--red);
+  letter-spacing:.3px;
+}
+.enabled-counter{
+  font-size:13px;
+  color:var(--gray-500);
+  font-weight:500;
+  padding:8px 0 4px;
+}
+.info-box{
+  background:var(--blue-50);
+  border:1px solid var(--blue-100);
+  border-radius:var(--radius-sm);
+  padding:16px 20px;
+  font-size:13px;
+  color:var(--gray-700);
+  line-height:1.7;
+  margin-top:24px;
+}
+.info-box strong{color:var(--gray-900)}
+.essential-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:28px;
+  padding-top:20px;
+  border-top:1px solid var(--gray-200);
+  gap:8px;
+}
+.essential-actions .right-btns{display:flex;gap:10px}
+
+/* ===== Review Phase (Step 2b) ===== */
+.accordion-section{
+  border:1px solid var(--gray-200);
+  border-radius:var(--radius);
+  margin-bottom:12px;
+  overflow:hidden;
+  background:var(--white);
+}
+.accordion-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 20px;
+  cursor:pointer;
+  background:var(--white);
+  transition:background .15s;
+  user-select:none;
+}
+.accordion-header:hover{background:var(--gray-50)}
+.accordion-header-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.accordion-chevron{
+  width:20px;
+  height:20px;
+  color:var(--gray-400);
+  transition:transform .25s ease;
+  flex-shrink:0;
+}
+.accordion-section.open .accordion-chevron{transform:rotate(180deg)}
+.accordion-title{font-size:14px;font-weight:600;color:var(--gray-800)}
+.accordion-count{font-size:12px;color:var(--gray-400);font-weight:500}
+.accordion-edit-btn{
+  font-size:12px;
+  font-weight:600;
+  color:var(--link);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 12px;
+  border-radius:6px;
+  transition:var(--transition);
+}
+.accordion-edit-btn:hover{background:var(--blue-50)}
+.accordion-body{
+  display:none;
+  padding:0 20px 20px;
+  border-top:1px solid var(--gray-100);
+}
+.accordion-section.open .accordion-body{display:block}
+
+/* Read-only items inside accordion */
+.ro-item{
+  display:flex;
+  gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--gray-50);
+  font-size:13px;
+  color:var(--gray-600);
+  line-height:1.5;
+}
+.ro-item:last-child{border-bottom:none}
+.ro-idx{
+  min-width:26px;
+  height:26px;
+  border-radius:50%;
+  background:var(--gray-100);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:700;
+  color:var(--gray-500);
+  flex-shrink:0;
+  margin-top:1px;
+}
+.ro-content{flex:1}
+.ro-label{font-weight:600;color:var(--gray-800);margin-bottom:2px}
+.ro-rule{font-size:12px;color:var(--gray-500);white-space:pre-wrap}
+.ro-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.ro-field{display:flex;gap:24px;padding:8px 0;font-size:13px}
+.ro-field-label{font-weight:600;color:var(--gray-700);min-width:140px}
+.ro-field-value{color:var(--gray-600)}
+
+/* ===== Drawer ===== */
+.drawer-backdrop{
+  position:fixed;
+  top:0;left:0;right:0;bottom:0;
+  background:rgba(15,23,42,.4);
+  z-index:200;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .3s ease,visibility .3s ease;
+}
+.drawer-backdrop.open{opacity:1;visibility:visible}
+.drawer{
+  position:fixed;
+  top:0;
+  right:-540px;
+  width:520px;
+  max-width:90vw;
+  height:100vh;
+  background:var(--white);
+  z-index:201;
+  display:flex;
+  flex-direction:column;
+  box-shadow:-8px 0 30px rgba(0,0,0,.12);
+  transition:right .3s cubic-bezier(.4,0,.2,1);
+}
+.drawer.open{right:0}
+.drawer-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 24px;
+  border-bottom:1px solid var(--gray-200);
+  flex-shrink:0;
+}
+.drawer-header h3{font-size:16px;font-weight:700;color:var(--gray-900)}
+.drawer-close{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  border:none;
+  background:var(--gray-100);
+  color:var(--gray-500);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  transition:var(--transition);
+}
+.drawer-close:hover{background:var(--gray-200);color:var(--gray-700)}
+.drawer-body{
+  flex:1;
+  overflow-y:auto;
+  padding:24px;
+}
+.drawer-footer{
+  padding:16px 24px;
+  border-top:1px solid var(--gray-200);
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  flex-shrink:0;
+}
+
+/* Dynamic list in drawer */
+.dyn-list{border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden}
+.dyn-item{
+  padding:14px 16px;
+  border-bottom:1px solid var(--gray-100);
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  background:var(--white);
+  transition:background .15s;
+}
+.dyn-item:last-child{border-bottom:none}
+.dyn-item:hover{background:var(--gray-50)}
+.dyn-item .item-id{
+  min-width:28px;
+  height:28px;
+  border-radius:50%;
+  background:var(--gray-100);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:var(--gray-500);
+  flex-shrink:0;
+  margin-top:2px;
+}
+.dyn-item .item-content{flex:1;display:flex;flex-direction:column;gap:8px}
+.dyn-item .item-content input,.dyn-item .item-content textarea,.dyn-item .item-content select{font-size:13px;padding:8px 12px}
+.dyn-item .item-row{display:flex;gap:8px;align-items:center}
+.dyn-item .item-row input,.dyn-item .item-row select{flex:1}
+.dyn-item .item-actions{flex-shrink:0}
+.btn-icon{
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:6px;
+  border-radius:6px;
+  color:var(--gray-400);
+  transition:var(--transition);
+  font-size:16px;
+  line-height:1;
+}
+.btn-icon:hover{background:var(--red-light);color:var(--red)}
+.dyn-add{padding:10px 16px;text-align:center}
+.dyn-add button{
+  background:none;
+  border:1px dashed var(--gray-300);
+  padding:8px 18px;
+  border-radius:var(--radius-sm);
+  color:var(--link);
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:var(--transition);
+  font-family:inherit;
+}
+.dyn-add button:hover{background:var(--blue-50);border-color:var(--link)}
+.checkbox-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600);white-space:nowrap}
+.checkbox-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--link)}
+
+/* ===== Preview (Step 3) ===== */
+.preview-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.preview-tab{
+  padding:7px 16px;
+  font-size:12px;
+  font-weight:600;
+  border:1px solid var(--gray-200);
+  border-radius:var(--radius-sm);
+  background:var(--white);
+  color:var(--gray-600);
+  cursor:pointer;
+  transition:var(--transition);
+}
+.preview-tab.active{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.preview-tab:hover:not(.active){background:var(--gray-50)}
+.preview-area{
+  background:var(--dark);
+  color:#e2e8f0;
+  padding:20px;
+  border-radius:var(--radius);
+  font-family:'Consolas','Monaco','Courier New',monospace;
+  font-size:12px;
+  line-height:1.6;
+  overflow-x:auto;
+  max-height:500px;
+  overflow-y:auto;
+  white-space:pre-wrap;
+  word-break:break-all;
+}
+
+/* Guide */
+.guide{margin-top:20px}
+.guide-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--gray-100)}
+.guide-step:last-child{border-bottom:none}
+.guide-num{
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:var(--primary);
+  color:var(--white);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  flex-shrink:0;
+}
+.guide-text{font-size:13px;color:var(--gray-600);line-height:1.6}
+.guide-text strong{color:var(--gray-800)}
+.guide-text code{
+  background:var(--gray-100);
+  padding:1px 6px;
+  border-radius:4px;
+  font-size:12px;
+  color:var(--gray-700);
+}
+
+/* Responsive */
+@media(max-width:640px){
+  .container{padding:16px}
+  .stepper{padding:16px 16px 0}
+  .step-label{font-size:11px}
+  .essential-panel{padding:20px}
+  .drawer{width:100%;max-width:100%}
+  .essential-actions{flex-direction:column;gap:10px}
+  .essential-actions .right-btns{width:100%;flex-direction:column}
+}
+</style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="header">
+  <h1>Dify DSL Builder</h1>
+  <span class="badge">BPaaS Agent Template</span>
+</div>
+
+<!-- ===== Stepper ===== -->
+<div class="stepper">
+  <div class="step-item active" id="step-ind-1">
+    <div class="step-circle">1</div>
+    <div class="step-label">テンプレート選択</div>
+  </div>
+  <div class="step-line" id="step-line-1"></div>
+  <div class="step-item" id="step-ind-2">
+    <div class="step-circle">2</div>
+    <div class="step-label">ビジネスロジック設定</div>
+  </div>
+  <div class="step-line" id="step-line-2"></div>
+  <div class="step-item" id="step-ind-3">
+    <div class="step-circle">3</div>
+    <div class="step-label">生成 &amp; ダウンロード</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ========== Step 1: テンプレート選択 ========== -->
+<div class="panel active" id="panel-1">
+  <!-- 1-a: カテゴリ一覧 -->
+  <div id="view-categories">
+    <div class="section-header">
+      <h2>業務カテゴリを選択</h2>
+      <p>自動化したい業務カテゴリを選択してください。カテゴリ内のテンプレートを選択し、次のステップで自部署の業務ルールを設定します。</p>
+    </div>
+    <div class="card-grid" id="category-grid"></div>
+  </div>
+  <!-- 1-b: テンプレート一覧 -->
+  <div id="view-templates" style="display:none">
+    <div class="breadcrumb">
+      <a onclick="showCategories()">業務カテゴリ</a>
+      <span>&rsaquo;</span>
+      <span id="breadcrumb-cat-name"></span>
+    </div>
+    <div class="section-header">
+      <h2 id="tmpl-list-title"></h2>
+      <p id="tmpl-list-desc"></p>
+    </div>
+    <div class="card-grid" id="template-grid"></div>
+  </div>
+</div>
+
+<!-- ========== Step 2: ビジネスロジック設定 ========== -->
+<div class="panel" id="panel-2">
+  <!-- Phase: Import Choice -->
+  <div id="phase-import-choice">
+    <div class="section-header">
+      <h2>ビジネスロジック設定</h2>
+      <p>業務ルールの設定方法を選択してください。</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:0 auto">
+      <!-- Excel Import card -->
+      <div class="card" style="cursor:pointer;transition:var(--transition);text-align:center;padding:40px 24px" onclick="showExcelImportPhase()" onmouseover="this.style.borderColor='var(--green)';this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:48px;margin-bottom:16px">📊</div>
+        <div style="font-size:17px;font-weight:700;color:var(--gray-900);margin-bottom:8px">Excelファイルで設定</div>
+        <div style="font-size:13px;color:var(--gray-500);line-height:1.6">テンプレートExcelに業務ルールを<br>記入してアップロード</div>
+        <div style="margin-top:16px"><span class="effect-tag green" style="font-size:12px">推奨</span></div>
+      </div>
+      <!-- Manual config card -->
+      <div class="card" style="cursor:pointer;transition:var(--transition);text-align:center;padding:40px 24px" onclick="showEssentialPhase()" onmouseover="this.style.borderColor='var(--link)';this.style.boxShadow='var(--shadow-lg)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='';this.style.boxShadow='';this.style.transform=''">
+        <div style="font-size:48px;margin-bottom:16px">⚙️</div>
+        <div style="font-size:17px;font-weight:700;color:var(--gray-900);margin-bottom:8px">画面で設定</div>
+        <div style="font-size:13px;color:var(--gray-500);line-height:1.6">テンプレートの設定値を<br>画面上で調整</div>
+      </div>
+    </div>
+    <div class="actions" style="max-width:700px;margin:28px auto 0">
+      <button class="btn btn-secondary" onclick="goStep(1)">&larr; テンプレート選択に戻る</button>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- Phase: Excel Import -->
+  <div id="phase-excel-import" style="display:none">
+    <div class="section-header">
+      <h2>Excelファイルで業務ルールを設定</h2>
+      <p>テンプレートExcelをダウンロードし、業務ルールを記入してアップロードしてください。</p>
+    </div>
+
+    <div class="card" style="padding:32px">
+      <!-- Step indicators -->
+      <div style="display:flex;gap:32px;margin-bottom:32px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">1</div>
+          <span style="font-size:14px;font-weight:600;color:var(--gray-700)">テンプレートをダウンロード</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gray-300);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">2</div>
+          <span style="font-size:14px;font-weight:600;color:var(--gray-400)">記入してアップロード</span>
+        </div>
+      </div>
+
+      <!-- Download template button -->
+      <div style="background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius-sm);padding:20px;margin-bottom:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--gray-800)">📥 テンプレートExcelをダウンロード</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-top:4px">記入例と説明付き。5つのシートに業務ルールを記入してください。</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="downloadTemplateExcel()">ダウンロード</button>
+        </div>
+      </div>
+
+      <!-- Upload area -->
+      <div id="excel-upload-area" style="border:2px dashed var(--gray-300);border-radius:var(--radius);padding:48px 24px;text-align:center;cursor:pointer;transition:var(--transition)" onclick="document.getElementById('excel-file-input').click()" ondragover="event.preventDefault();this.style.borderColor='var(--green)';this.style.background='var(--green-light)'" ondragleave="this.style.borderColor='var(--gray-300)';this.style.background=''" ondrop="event.preventDefault();this.style.borderColor='var(--gray-300)';this.style.background='';handleExcelDrop(event)">
+        <div style="font-size:36px;margin-bottom:12px">📤</div>
+        <div style="font-size:15px;font-weight:600;color:var(--gray-700)">Excelファイルをドラッグ&ドロップ</div>
+        <div style="font-size:13px;color:var(--gray-400);margin-top:6px">または クリックしてファイルを選択</div>
+        <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(this)">
+      </div>
+
+      <!-- Import result (hidden initially) -->
+      <div id="excel-import-result" style="display:none;margin-top:24px">
+        <div id="excel-import-status"></div>
+        <div id="excel-import-preview" style="margin-top:16px"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="showImportChoice()">&larr; 設定方法の選択に戻る</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-link" id="btn-excel-review" style="display:none" onclick="goToReviewPhase()">詳細を確認 &rarr;</button>
+        <button class="btn btn-green" id="btn-excel-generate" style="display:none" onclick="fastGenerate()">この設定で生成 &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase: Essential Setup (existing) -->
+  <div id="phase-essential" style="display:none">
+    <div class="section-header">
+      <h2>ビジネスロジック設定</h2>
+      <p>テンプレートのデフォルト値をベースに、主要な設定を確認・調整してください。</p>
+    </div>
+    <div class="card">
+      <div class="essential-panel" id="essential-body">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase: Review & Confirm (existing) -->
+  <div id="phase-review" style="display:none">
+    <div class="section-header">
+      <h2>詳細設定の確認</h2>
+      <p>各セクションの内容を確認し、必要に応じて「編集」から変更できます。</p>
+    </div>
+    <div id="review-accordions"></div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="showImportChoice()">&larr; 設定方法の選択に戻る</button>
+      <button class="btn btn-green" onclick="goStep(3)">この設定で生成 &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Step 3: 生成 & ダウンロード ========== -->
+<div class="panel" id="panel-3">
+  <div class="section-header">
+    <h2>DSLファイル生成完了</h2>
+    <p>設定内容に基づいてDify DSLファイルを生成しました。個別にダウンロードするか、一括でダウンロードしてください。</p>
+  </div>
+
+  <div class="card" style="padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:15px;font-weight:700;color:var(--gray-800)">DSLプレビュー</h3>
+      <button class="btn btn-green btn-sm" onclick="downloadAll()">&#x1F4E6; 一括ダウンロード (4ファイル)</button>
+    </div>
+    <div class="preview-tabs" id="preview-tabs"></div>
+    <div class="preview-area" id="preview-area">ファイルを選択してください</div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap" id="download-btns"></div>
+  </div>
+
+  <div class="card guide" style="padding:24px;margin-top:16px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:14px">Difyへのインポート手順</h3>
+    <div class="guide-step"><div class="guide-num">1</div><div class="guide-text"><strong>ツールを先にインポート</strong>: チェックツール → 判定ツール → 結果登録ツール の順にDifyの「DSLをインポート」で読み込みます。</div></div>
+    <div class="guide-step"><div class="guide-num">2</div><div class="guide-text"><strong>ツールとして公開</strong>: インポートした各ワークフローを「ツールとして公開」し、表示されるUUID (provider_name) をメモします。</div></div>
+    <div class="guide-step"><div class="guide-num">3</div><div class="guide-text"><strong>オーケストレータのUUID更新</strong>: ダウンロードしたオーケストレータYMLの <code>provider_name</code> を、Step 2でメモしたUUIDに書き換えます。</div></div>
+    <div class="guide-step"><div class="guide-num">4</div><div class="guide-text"><strong>オーケストレータをインポート</strong>: 更新したオーケストレータYMLをDifyにインポートして完了です。</div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="goStep(2)">&larr; 設定に戻る</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ===== Drawer Overlay ===== -->
+<div class="drawer-backdrop" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <h3 id="drawer-title">編集</h3>
+    <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer">
+    <button class="btn btn-secondary btn-sm" onclick="closeDrawer()">キャンセル</button>
+    <button class="btn btn-primary btn-sm" onclick="saveDrawerAndClose()">保存して閉じる</button>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// カテゴリ定義
+// =====================================================================
+const CATEGORIES = [
+  {
+    id: "document_review",
+    name: "書面審査",
+    icon: "\uD83D\uDCCB",
+    description: "注文書・契約書・見積書など、各種書面の審査業務を自動化します。",
+    templateCount: 3,
+    tags: ["チェック自動化", "承認・差戻し", "結果登録"]
+  },
+  {
+    id: "invoice_processing",
+    name: "請求書業務",
+    icon: "\uD83D\uDCB0",
+    description: "請求書の受領・照合・支払処理に関する業務を自動化します。",
+    templateCount: 2,
+    tags: ["請求照合", "支払処理", "消込"],
+    mock: true
+  },
+  {
+    id: "data_management",
+    name: "データ管理",
+    icon: "\uD83D\uDDC4\uFE0F",
+    description: "マスタデータの登録・更新・整合性チェックなどの管理業務を自動化します。",
+    templateCount: 2,
+    tags: ["マスタ管理", "データ連携", "整合性チェック"],
+    mock: true
+  }
+];
+
+// =====================================================================
+// テンプレートデータ (カテゴリごと)
+// =====================================================================
+const TEMPLATES_BY_CAT = {
+  "document_review": [
+    {
+      id: "order_review",
+      name: "注文書審査",
+      icon: "\uD83D\uDCE6",
+      description: "注文書画像を読み取り、社内データと突合して承認・差戻しを判定します。",
+      effects: [
+        {text: "チェック工数を約30%削減", type: "green"},
+        {text: "チェック業務を簡単化（誰でもできる）", type: "green"},
+        {text: "見逃しリスクの低減", type: "orange"}
+      ],
+      toolCount: 4,
+      capabilities: [
+        "注文書画像の読み取り・内容チェック",
+        "突合データとの自動照合（金額・数量・企業名 等）",
+        "承認 or 差戻しの自動判定",
+        "審査結果のシステム登録"
+      ],
+      defaultLogic: {
+        name: "書面審査業務",
+        desc: "企業間の契約に際しての書面審査を自動化する業務",
+        model: "gpt-4.1-mini",
+        provider: "langgenius/azure_openai/azure_openai",
+        temperature: 0.7,
+        checkCriteria: [
+          {name:"書面種別判定",rule:'"■書面種別判定結果"に記載されている書面種別に"注文書"が含まれていない場合、"添付書類相違"でNG。\n"■書面種別判定結果"に記載されている結果が"書面未添付"の場合、"書面未添付"でNG。',blocking:true},
+          {name:"契約日（注文日）",rule:"発注書画像の日付と一致しているか。発注書画像に注文日が未記載の場合はNG。",blocking:false},
+          {name:"受注企業名",rule:"発注書画像について、企業名が省略されず記載されており、突合用データと一致しているか",blocking:false},
+          {name:"品目",rule:"発注書画像について、品目が明記されており、突合用データと一致しているか。また、白物家電の場合は販売不可なので、品目が白物家電にあたらないこと。",blocking:false},
+          {name:"数量",rule:"発注書画像について、数量が明記されており、突合用データと一致しているか",blocking:false},
+          {name:"発注金額",rule:"発注書画像について、発注金額が明記されており、突合用データと一致しているか。基本契約なしかつ受注額100万円以上の場合はNG。金額が一致していない場合もNG。",blocking:false},
+          {name:"押印",rule:"取引先の押印がされているか。されていればOK、されていなければNG",blocking:false},
+          {name:"担当者名",rule:"社判を押印した企業の担当者名がフルネームで記載されていること。フルネームでなければNG。社判を押印していない企業の担当者名についてはチェック不要。",blocking:false}
+        ],
+        returnComments: [
+          {id:1,text:"書面が未添付です。添付いただき、再申請して下さい。",flowType:"document_check"},
+          {id:2,text:'注文書の(控)・(仮)が添付されていますので、「手配可の差戻し」とします。正式な注文書を入手次第、再申請して下さい。',flowType:"document_check"},
+          {id:3,text:"広域・ＢＰ業務Ｇ（広域顧客営業協力制度担当）の正式な納入依頼書が未添付です。添付いただき、再申請して下さい。",flowType:"document_check"},
+          {id:4,text:'「手配可の差戻し」としますが、○○を入手次第、再申請して下さい。',flowType:"document_check"},
+          {id:5,text:"【地紋印刷画像】",flowType:"document_check"},
+          {id:6,text:"起案書DBリンクがされておりません。Notesの起案書DBリンクを審査データへ添付して、審査依頼をして下さい。",flowType:"document_check"},
+          {id:7,text:"注文書に『注文日』が未記載です。再申請頂く際は記載頂いた日付とＶ－ＵＰデータ契約締結日（注文日）が一致している事を確認して下さい。",flowType:"data_verification"},
+          {id:8,text:"注文書の『お客様会社名』が未記載です。記載していただき、再申請して下さい。",flowType:"data_verification"},
+          {id:9,text:"注文書の『お客様氏名の欄』が未記載です。決裁権限者・ご担当者の氏名を『フルネーム』で記載していただき、再申請して下さい。",flowType:"data_verification"},
+          {id:10,text:"注文書にお客様捺印(代表者印/個人印)がありません。押印していただき、再申請して下さい。※シャチハタ印は不可となります。",flowType:"data_verification"},
+          {id:11,text:"分割審査は不可となっております。V-UPデータは注文書通り作成下さい。発注を分けられるようであれば、契約審査完了後に分けて下さい。",flowType:"data_verification"},
+          {id:12,text:"『契約金額』が『注文書』と『V-UPデータ/契約金額』で不一致です。",flowType:"document_check"},
+          {id:13,text:"『単価金額』が『注文書』と『V-UPデータ/金額』で不一致です。",flowType:"document_check"},
+          {id:14,text:"注文書とV-UPデータの『お客様名』が不一致です。（データの「請求先名」は『○○○』です）",flowType:"data_verification"},
+          {id:15,text:"書面とV-UPデータの商品明細が不一致です。",flowType:"data_verification"},
+          {id:16,text:"商品の一致が確認出来ません。同一商品で間違い無いようであればV-UPコメント欄に「同一商品です」と入力いただき再度審査をご依頼下さい。",flowType:"data_verification"},
+          {id:17,text:'代替・終息コメントにより、「手配可の差戻し」としますが、売上までに契約書面を取り直し、もしくは訂正いただき、再申請して下さい。',flowType:"data_verification"},
+          {id:18,text:"数量が、『注文書』と『V-UPデータ』で不一致です。",flowType:"data_verification"},
+          {id:19,text:"『支払条件（期日/方法）』が、『注文書』と『V-UP回収条件/支払条件（期日/方法）』で不一致です。",flowType:"data_verification"},
+          {id:20,text:"V-UP回収条件が未入力です。入力いただき、再申請して下さい。",flowType:"data_verification"},
+          {id:21,text:"基本契約「無」ユーザーです。売買契約書を取得し、『売買契約書』表紙で再申請して下さい。",flowType:"document_check"}
+        ],
+        checkItems: [
+          {id:1,name:"書面未着：添付書面不備",flowType:"document_check"},
+          {id:2,name:"書面未着：表紙不備",flowType:"document_check"},
+          {id:3,name:"書面：注文日-無/不備",flowType:"document_check"},
+          {id:4,name:"書面：甲)会社名（EU）-不備",flowType:"document_check"},
+          {id:5,name:"書面：甲)役職者名or担当者名-無",flowType:"document_check"},
+          {id:6,name:"書面：お客様契約印-不備",flowType:"document_check"},
+          {id:7,name:"ﾃﾞｰﾀ不一致：契約金額(税抜)",flowType:"data_verification"},
+          {id:8,name:"ﾃﾞｰﾀ不一致：甲)会社名(EU)",flowType:"data_verification"},
+          {id:9,name:"ﾃﾞｰﾀ不一致：(明細)商品名",flowType:"data_verification"},
+          {id:10,name:"ﾃﾞｰﾀ不一致：数量",flowType:"data_verification"},
+          {id:11,name:"ﾃﾞｰﾀ不一致：支払条件",flowType:"data_verification"},
+          {id:12,name:"100万円以上：注文書受注不可",flowType:"document_check"}
+        ],
+        apiSystemName: "BPaaS 業務管理システム",
+        apiUrl: "https://external.rsi-bpaas-dev.rinfra.ricoh.com/process",
+        apiMethod: "post",
+        extractionParams: [
+          {name:"company_name",desc:'"契約者（甲）お客様名（書面用）"の値を代入してください。',required:true},
+          {name:"system_status",desc:'"書面審査結果"の値が"承認"であれば"completed"、"差戻し"であれば"returned"となります。',required:true},
+          {name:"decision_reason",desc:'"書面チェック結果"に書かれている、判断理由を示した文章です。書面審査結果が"承認"の場合は何も代入せず、""としてください。',required:false},
+          {name:"contract_number",desc:'"契約番号"の値です。',required:false},
+          {name:"case_number",desc:'"案件番号"の値です。"案件番号"が存在しない場合は12345678を代入してください。',required:false}
+        ]
+      }
+    },
+    {
+      id: "contract_review",
+      name: "契約書審査",
+      icon: "\uD83D\uDCDD",
+      description: "契約書の条文・署名・押印を確認し、社内規定との整合性をチェックします。",
+      effects: [
+        {text: "チェック工数を約30%削減", type: "green"},
+        {text: "条文見落とし防止", type: "orange"}
+      ],
+      toolCount: 4,
+      capabilities: [
+        "契約書画像の読み取り・条文チェック",
+        "社内規定との自動照合",
+        "承認 or 差戻しの自動判定",
+        "審査結果のシステム登録"
+      ],
+      mock: true
+    },
+    {
+      id: "estimate_review",
+      name: "見積書審査",
+      icon: "\uD83D\uDCCA",
+      description: "見積書の金額・品目・条件を確認し、予算との整合性をチェックします。",
+      effects: [
+        {text: "金額照合の自動化", type: "green"},
+        {text: "予算超過の早期発見", type: "orange"}
+      ],
+      toolCount: 4,
+      capabilities: [
+        "見積書の読み取り・金額チェック",
+        "予算データとの自動照合",
+        "承認 or 差戻しの自動判定",
+        "審査結果のシステム登録"
+      ],
+      mock: true
+    }
+  ],
+  "invoice_processing": [
+    {
+      id: "invoice_matching",
+      name: "請求書照合",
+      icon: "\uD83D\uDD0D",
+      description: "受領した請求書を注文データと自動照合し、差異を検出します。",
+      effects: [
+        {text: "照合作業を約40%削減", type: "green"},
+        {text: "支払遅延の防止", type: "orange"}
+      ],
+      toolCount: 3,
+      capabilities: [
+        "請求書画像の読み取り・金額抽出",
+        "注文データ・納品データとの自動照合",
+        "差異レポートの自動生成"
+      ],
+      mock: true
+    },
+    {
+      id: "payment_processing",
+      name: "支払処理",
+      icon: "\uD83D\uDCB3",
+      description: "照合済み請求書の支払データを生成し、承認フローに回付します。",
+      effects: [
+        {text: "支払処理の迅速化", type: "green"},
+        {text: "二重支払の防止", type: "orange"}
+      ],
+      toolCount: 3,
+      capabilities: [
+        "支払データの自動生成",
+        "承認フローへの自動回付",
+        "処理結果のシステム登録"
+      ],
+      mock: true
+    }
+  ],
+  "data_management": [
+    {
+      id: "master_update",
+      name: "マスタ更新",
+      icon: "\uD83D\uDD04",
+      description: "取引先・商品等のマスタデータ変更申請を検証し、自動更新します。",
+      effects: [
+        {text: "更新作業の工数削減", type: "green"},
+        {text: "入力ミスの防止", type: "orange"}
+      ],
+      toolCount: 3,
+      capabilities: [
+        "変更申請内容のバリデーション",
+        "既存データとの重複・矛盾チェック",
+        "マスタへの自動反映・履歴記録"
+      ],
+      mock: true
+    },
+    {
+      id: "data_reconciliation",
+      name: "データ整合性チェック",
+      icon: "\u2705",
+      description: "複数システム間のデータ整合性を定期的にチェックし、差異を報告します。",
+      effects: [
+        {text: "不整合の早期発見", type: "green"},
+        {text: "手動突合の廃止", type: "orange"}
+      ],
+      toolCount: 3,
+      capabilities: [
+        "複数データソースの自動取得",
+        "項目単位での突合・差異検出",
+        "差異レポートの自動生成・通知"
+      ],
+      mock: true
+    }
+  ]
+};
+
+// =====================================================================
+// State
+// =====================================================================
+let currentStep = 1;
+let selectedCategory = null;
+let selectedTemplate = null;
+let config = {};
+let generatedDSLs = {};
+let currentDrawerSection = null;
+
+// =====================================================================
+// Utility
+// =====================================================================
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================================================================
+// Step Navigation
+// =====================================================================
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  for (let i = 1; i <= 3; i++) {
+    const ind = document.getElementById('step-ind-' + i);
+    ind.classList.remove('active', 'done');
+    if (i < n) ind.classList.add('done');
+    else if (i === n) ind.classList.add('active');
+  }
+  for (let i = 1; i <= 2; i++) {
+    const line = document.getElementById('step-line-' + i);
+    line.classList.toggle('done', i < n);
+  }
+  if (n === 1) showCategories();
+  if (n === 2) showImportChoice();
+  if (n === 3) generateDSLs();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// =====================================================================
+// Step 1: Category & Template Selection
+// =====================================================================
+function renderCategories() {
+  const grid = document.getElementById('category-grid');
+  grid.innerHTML = CATEGORIES.map(cat => `
+    <div class="card cat-card${cat.mock ? ' is-mock' : ''}" onclick="${cat.mock ? 'showMockAlert()' : `showTemplates('${cat.id}')`}">
+      ${cat.mock ? '<div class="mock-badge">COMING SOON</div>' : ''}
+      <div class="cat-header">
+        <div class="cat-icon">${cat.icon}</div>
+        <div>
+          <div class="cat-title">${cat.name}</div>
+          <div class="cat-desc">${cat.description}</div>
+        </div>
+      </div>
+      <div class="cat-meta">
+        ${cat.tags.map(t => `<span class="meta-chip">${t}</span>`).join('')}
+      </div>
+      <div class="cat-footer">
+        <span>${cat.templateCount} テンプレート</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showTemplates(catId) {
+  selectedCategory = CATEGORIES.find(c => c.id === catId);
+  const templates = TEMPLATES_BY_CAT[catId] || [];
+  document.getElementById('view-categories').style.display = 'none';
+  document.getElementById('view-templates').style.display = 'block';
+  document.getElementById('breadcrumb-cat-name').textContent = selectedCategory.name;
+  document.getElementById('tmpl-list-title').textContent = selectedCategory.name + ' テンプレート';
+  document.getElementById('tmpl-list-desc').textContent = '導入する業務テンプレートを選択してください。次のステップで自部署の業務ルールを設定します。';
+  const grid = document.getElementById('template-grid');
+  grid.innerHTML = templates.map(t => `
+    <div class="card template-card${t.mock ? ' is-mock' : ''}" onclick="${t.mock ? 'showMockAlert()' : `selectTemplate('${catId}','${t.id}')`}">
+      ${t.mock ? '<div class="mock-badge">準備中</div>' : ''}
+      <div class="card-header">
+        <div class="card-icon">${t.icon}</div>
+        <div>
+          <div class="card-title">${t.name}</div>
+          <div class="card-desc">${t.description}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--gray-500);font-weight:600;margin-bottom:6px">効果</div>
+        <div style="margin-bottom:14px">${t.effects.map(e => `<span class="effect-tag ${e.type}">${e.text}</span>`).join('')}</div>
+        <div style="font-size:12px;color:var(--gray-500);font-weight:600;margin-bottom:6px">自動化できるタスク</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          ${t.capabilities.map((c,i) => `<div style="font-size:12px;color:var(--gray-600);display:flex;align-items:baseline;gap:6px"><span style="color:var(--link);font-weight:700">${i+1}.</span>${c}</div>`).join('')}
+        </div>
+      </div>
+      <div class="card-footer">
+        <span><span class="tool-count">${t.toolCount}</span> つのワークフローで構成</span>
+        <span>Dify v0.5.0 DSL</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCategories() {
+  document.getElementById('view-categories').style.display = 'block';
+  document.getElementById('view-templates').style.display = 'none';
+  selectedCategory = null;
+}
+
+function showMockAlert() {
+  alert('このテンプレートは現在準備中です。今後のアップデートでご利用いただけます。');
+}
+
+function selectTemplate(catId, tmplId) {
+  const templates = TEMPLATES_BY_CAT[catId] || [];
+  selectedTemplate = templates.find(t => t.id === tmplId);
+  if (!selectedTemplate || selectedTemplate.mock) return;
+  config = JSON.parse(JSON.stringify(selectedTemplate.defaultLogic));
+  // Add enabled flag to each checkCriteria
+  config.checkCriteria.forEach(c => { c.enabled = true; });
+  loadEssentialUI();
+  goStep(2);
+}
+
+// =====================================================================
+// Step 2a: Essential Setup
+// =====================================================================
+function loadEssentialUI() {
+  const body = document.getElementById('essential-body');
+  const enabledCount = config.checkCriteria.filter(c => c.enabled).length;
+  const totalCount = config.checkCriteria.length;
+
+  body.innerHTML = `
+    <!-- 業務名 -->
+    <div class="form-group">
+      <label class="form-label">業務名</label>
+      <input type="text" id="ess-name" value="${esc(config.name)}">
+    </div>
+
+    <!-- チェック観点 toggle switches -->
+    <div class="form-group">
+      <label class="form-label">チェック観点</label>
+      <div class="enabled-counter" id="enabled-counter">${enabledCount}/${totalCount} 項目が有効</div>
+      <div id="criteria-toggles" style="border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:4px 16px">
+        ${renderCriteriaToggles()}
+      </div>
+    </div>
+
+    <!-- 結果登録先URL -->
+    <div class="form-group">
+      <label class="form-label">結果登録先URL</label>
+      <input type="url" id="ess-api-url" value="${esc(config.apiUrl)}">
+    </div>
+
+    <!-- Info box -->
+    <div class="info-box">
+      <span id="info-counts"></span>変更する場合は「詳細を確認」から編集できます。
+    </div>
+
+    <!-- Action buttons -->
+    <div class="essential-actions">
+      <button class="btn btn-secondary" onclick="goStep(1)">&larr; 戻る</button>
+      <div class="right-btns">
+        <button class="btn btn-link" onclick="goToReviewPhase()">詳細を確認 &rarr;</button>
+        <button class="btn btn-green" onclick="fastGenerate()">デフォルトで生成 &rarr;</button>
+      </div>
+    </div>
+  `;
+
+  updateInfoCounts();
+}
+
+function renderCriteriaToggles() {
+  return config.checkCriteria.map((c, i) => {
+    // ルールテキストを改行で区切って最初の要点を抽出（最大80文字）
+    const rulePreview = c.rule ? c.rule.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    return `
+    <div class="criteria-toggle-row${c.enabled ? '' : ' disabled'}">
+      <label class="toggle-switch">
+        <input type="checkbox" ${c.enabled ? 'checked' : ''} onchange="toggleCriterion(${i}, this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+      <div class="criteria-info">
+        <div class="criteria-name-row">
+          <span class="criteria-name">${esc(c.name)}</span>
+          ${c.blocking ? '<span class="blocking-badge">ブロッキング</span>' : ''}
+        </div>
+        <div class="criteria-rule">${esc(rulePreview)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCriterion(idx, checked) {
+  config.checkCriteria[idx].enabled = checked;
+  // Update row style
+  const rows = document.querySelectorAll('#criteria-toggles .criteria-toggle-row');
+  if (rows[idx]) rows[idx].classList.toggle('disabled', !checked);
+  updateEnabledCounter();
+}
+
+function updateEnabledCounter() {
+  const enabledCount = config.checkCriteria.filter(c => c.enabled).length;
+  const totalCount = config.checkCriteria.length;
+  const counter = document.getElementById('enabled-counter');
+  if (counter) counter.textContent = `${enabledCount}/${totalCount} 項目が有効`;
+}
+
+function updateInfoCounts() {
+  const el = document.getElementById('info-counts');
+  if (!el) return;
+  const rcCount = config.returnComments.length;
+  const ciCount = config.checkItems.length;
+  const epCount = config.extractionParams.length;
+  el.innerHTML = `その他の設定（<strong>差戻しコメント${rcCount}件</strong>、<strong>チェック項目${ciCount}件</strong>、<strong>データ連携項目${epCount}件</strong>、<strong>LLMモデル設定</strong>）はテンプレートの推奨値が適用されます。`;
+}
+
+function showEssentialPhase() {
+  document.getElementById('phase-import-choice').style.display = 'none';
+  document.getElementById('phase-excel-import').style.display = 'none';
+  document.getElementById('phase-essential').style.display = 'block';
+  document.getElementById('phase-review').style.display = 'none';
+  loadEssentialUI();
+}
+
+function showReviewPhase() {
+  document.getElementById('phase-import-choice').style.display = 'none';
+  document.getElementById('phase-excel-import').style.display = 'none';
+  document.getElementById('phase-essential').style.display = 'none';
+  document.getElementById('phase-review').style.display = 'block';
+  renderReviewAccordion();
+}
+
+function showImportChoice() {
+  document.getElementById('phase-import-choice').style.display = 'block';
+  document.getElementById('phase-excel-import').style.display = 'none';
+  document.getElementById('phase-essential').style.display = 'none';
+  document.getElementById('phase-review').style.display = 'none';
+}
+
+function showExcelImportPhase() {
+  document.getElementById('phase-import-choice').style.display = 'none';
+  document.getElementById('phase-excel-import').style.display = 'block';
+  document.getElementById('phase-essential').style.display = 'none';
+  document.getElementById('phase-review').style.display = 'none';
+}
+
+function goToReviewPhase() {
+  // Read essential fields into config before switching
+  const nameEl = document.getElementById('ess-name');
+  if (nameEl) config.name = nameEl.value;
+  const urlEl = document.getElementById('ess-api-url');
+  if (urlEl) config.apiUrl = urlEl.value;
+  showReviewPhase();
+}
+
+function fastGenerate() {
+  // Read essential fields into config
+  const nameEl = document.getElementById('ess-name');
+  if (nameEl) config.name = nameEl.value;
+  const urlEl = document.getElementById('ess-api-url');
+  if (urlEl) config.apiUrl = urlEl.value;
+  goStep(3);
+}
+
+// =====================================================================
+// Step 2b: Review & Confirm (Accordion)
+// =====================================================================
+const REVIEW_SECTIONS = [
+  {key: 'basic', title: '基本設定', icon: ''},
+  {key: 'checks', title: 'チェック観点', icon: ''},
+  {key: 'comments', title: '差戻しコメント', icon: ''},
+  {key: 'items', title: 'チェック項目', icon: ''},
+  {key: 'api', title: 'システム連携', icon: ''}
+];
+
+function renderReviewAccordion() {
+  const container = document.getElementById('review-accordions');
+  container.innerHTML = REVIEW_SECTIONS.map(sec => {
+    let countText = '';
+    if (sec.key === 'checks') countText = `${config.checkCriteria.length}件`;
+    else if (sec.key === 'comments') countText = `${config.returnComments.length}件`;
+    else if (sec.key === 'items') countText = `${config.checkItems.length}件`;
+    else if (sec.key === 'api') countText = `${config.extractionParams.length}件のデータ項目`;
+
+    return `
+      <div class="accordion-section" id="acc-${sec.key}">
+        <div class="accordion-header" onclick="toggleSection('${sec.key}')">
+          <div class="accordion-header-left">
+            <svg class="accordion-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            <span class="accordion-title">${sec.title}</span>
+            ${countText ? `<span class="accordion-count">${countText}</span>` : ''}
+          </div>
+          <button class="accordion-edit-btn" onclick="event.stopPropagation(); openDrawer('${sec.key}')">編集</button>
+        </div>
+        <div class="accordion-body">
+          ${renderReviewBody(sec.key)}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderReviewBody(key) {
+  if (key === 'basic') {
+    return `
+      <div class="ro-field"><span class="ro-field-label">業務名</span><span class="ro-field-value">${esc(config.name)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">業務説明</span><span class="ro-field-value">${esc(config.desc)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">LLMモデル</span><span class="ro-field-value">${esc(config.model)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">プロバイダー</span><span class="ro-field-value">${esc(config.provider)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">Temperature</span><span class="ro-field-value">${config.temperature}</span></div>
+    `;
+  }
+  if (key === 'checks') {
+    return config.checkCriteria.map((c, i) => `
+      <div class="ro-item">
+        <div class="ro-idx">${i + 1}</div>
+        <div class="ro-content">
+          <div class="ro-label">${esc(c.name)} ${c.blocking ? '<span class="blocking-badge">ブロッキング</span>' : ''} ${!c.enabled ? '<span style="font-size:11px;color:var(--gray-400);font-weight:600">(無効)</span>' : ''}</div>
+          <div class="ro-rule">${esc(c.rule)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  if (key === 'comments') {
+    return config.returnComments.map(c => `
+      <div class="ro-item">
+        <div class="ro-idx">${c.id}</div>
+        <div class="ro-content">
+          <div style="font-size:13px;color:var(--gray-700)">${esc(c.text)}</div>
+          <div class="ro-meta">${c.flowType === 'document_check' ? '書面不備' : 'データ不一致'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  if (key === 'items') {
+    return config.checkItems.map(c => `
+      <div class="ro-item">
+        <div class="ro-idx">${c.id}</div>
+        <div class="ro-content">
+          <div class="ro-label">${esc(c.name)}</div>
+          <div class="ro-meta">${c.flowType === 'document_check' ? '書面不備' : 'データ不一致'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  if (key === 'api') {
+    return `
+      <div class="ro-field"><span class="ro-field-label">登録先システム名</span><span class="ro-field-value">${esc(config.apiSystemName)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">接続先URL</span><span class="ro-field-value">${esc(config.apiUrl)}</span></div>
+      <div class="ro-field"><span class="ro-field-label">通信方式</span><span class="ro-field-value">${config.apiMethod.toUpperCase()}</span></div>
+      <div style="margin-top:12px;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:8px">登録するデータ項目</div>
+      ${config.extractionParams.map((p, i) => `
+        <div class="ro-item">
+          <div class="ro-idx">${i + 1}</div>
+          <div class="ro-content">
+            <div class="ro-label">${esc(p.name)} ${p.required ? '<span style="font-size:10px;color:var(--red);font-weight:600">必須</span>' : ''}</div>
+            <div class="ro-rule">${esc(p.desc)}</div>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+  return '';
+}
+
+function toggleSection(key) {
+  const el = document.getElementById('acc-' + key);
+  if (el) el.classList.toggle('open');
+}
+
+// =====================================================================
+// Drawer
+// =====================================================================
+const DRAWER_CONFIGS = {
+  basic: {
+    title: '基本設定の編集',
+    render: function(container) {
+      container.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">業務名</label>
+          <input type="text" id="drw-name" value="${esc(config.name)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">業務説明</label>
+          <textarea id="drw-desc" rows="3">${esc(config.desc)}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">LLMモデル名</label>
+          <input type="text" id="drw-model" value="${esc(config.model)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">プロバイダー</label>
+          <input type="text" id="drw-provider" value="${esc(config.provider)}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temperature</label>
+          <input type="number" id="drw-temp" value="${config.temperature}" step="0.1" min="0" max="2">
+        </div>
+      `;
+    },
+    read: function() {
+      config.name = document.getElementById('drw-name').value;
+      config.desc = document.getElementById('drw-desc').value;
+      config.model = document.getElementById('drw-model').value;
+      config.provider = document.getElementById('drw-provider').value;
+      config.temperature = parseFloat(document.getElementById('drw-temp').value);
+    }
+  },
+  checks: {
+    title: 'チェック観点の編集',
+    render: function(container) {
+      container.innerHTML = `
+        <div class="form-hint" style="margin-bottom:14px">チェックツールが注文書画像をチェックする際の観点を設定します。「ブロッキング」にチェックを入れると、その項目がNGの場合に後続チェックがスキップされます。</div>
+        <div class="dyn-list" id="drw-check-criteria-list">
+          ${config.checkCriteria.map((c, i) => `
+            <div class="dyn-item" data-idx="${i}">
+              <div class="item-id">${i + 1}</div>
+              <div class="item-content">
+                <div class="item-row">
+                  <input type="text" class="drw-cc-name" value="${esc(c.name)}" placeholder="チェック観点名">
+                  <label class="checkbox-row"><input type="checkbox" class="drw-cc-block" ${c.blocking ? 'checked' : ''}> ブロッキング</label>
+                  <label class="checkbox-row"><input type="checkbox" class="drw-cc-enabled" ${c.enabled ? 'checked' : ''}> 有効</label>
+                </div>
+                <textarea class="drw-cc-rule" rows="2" placeholder="チェックルール">${esc(c.rule)}</textarea>
+              </div>
+              <div class="item-actions"><button class="btn-icon" onclick="drwRemoveCheckCriteria(${i})" title="削除">\u2716</button></div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="dyn-add"><button onclick="drwAddCheckCriteria()">+ チェック観点を追加</button></div>
+      `;
+    },
+    read: function() {
+      config.checkCriteria = [...document.querySelectorAll('#drw-check-criteria-list .dyn-item')].map(el => ({
+        name: el.querySelector('.drw-cc-name').value,
+        rule: el.querySelector('.drw-cc-rule').value,
+        blocking: el.querySelector('.drw-cc-block').checked,
+        enabled: el.querySelector('.drw-cc-enabled').checked
+      }));
+    }
+  },
+  comments: {
+    title: '差戻しコメントの編集',
+    render: function(container) {
+      container.innerHTML = `
+        <div class="form-hint" style="margin-bottom:14px">差戻し時に申請者へ通知するコメント文を設定します。</div>
+        <div class="dyn-list" id="drw-return-comments-list">
+          ${config.returnComments.map((c, i) => `
+            <div class="dyn-item" data-idx="${i}">
+              <div class="item-id">${c.id}</div>
+              <div class="item-content">
+                <textarea class="drw-rc-text" rows="2" placeholder="差戻しコメント">${esc(c.text)}</textarea>
+                <div class="item-row">
+                  <span style="font-size:12px;color:var(--gray-500);white-space:nowrap">分類:</span>
+                  <select class="drw-rc-flow"><option value="document_check" ${c.flowType==='document_check'?'selected':''}>書面不備</option><option value="data_verification" ${c.flowType==='data_verification'?'selected':''}>データ不一致</option></select>
+                </div>
+              </div>
+              <div class="item-actions"><button class="btn-icon" onclick="drwRemoveReturnComment(${i})" title="削除">\u2716</button></div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="dyn-add"><button onclick="drwAddReturnComment()">+ 差戻しコメントを追加</button></div>
+      `;
+    },
+    read: function() {
+      config.returnComments = [...document.querySelectorAll('#drw-return-comments-list .dyn-item')].map((el, i) => ({
+        id: i + 1,
+        text: el.querySelector('.drw-rc-text').value,
+        flowType: el.querySelector('.drw-rc-flow').value
+      }));
+    }
+  },
+  items: {
+    title: 'チェック項目の編集',
+    render: function(container) {
+      container.innerHTML = `
+        <div class="form-hint" style="margin-bottom:14px">審査結果として記録されるチェック項目を設定します。</div>
+        <div class="dyn-list" id="drw-check-items-list">
+          ${config.checkItems.map((c, i) => `
+            <div class="dyn-item" data-idx="${i}">
+              <div class="item-id">${c.id}</div>
+              <div class="item-content">
+                <div class="item-row">
+                  <input type="text" class="drw-ci-name" value="${esc(c.name)}" placeholder="チェック項目名">
+                  <span style="font-size:12px;color:var(--gray-500);white-space:nowrap">分類:</span>
+                  <select class="drw-ci-flow"><option value="document_check" ${c.flowType==='document_check'?'selected':''}>書面不備</option><option value="data_verification" ${c.flowType==='data_verification'?'selected':''}>データ不一致</option></select>
+                </div>
+              </div>
+              <div class="item-actions"><button class="btn-icon" onclick="drwRemoveCheckItem(${i})" title="削除">\u2716</button></div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="dyn-add"><button onclick="drwAddCheckItem()">+ チェック項目を追加</button></div>
+      `;
+    },
+    read: function() {
+      config.checkItems = [...document.querySelectorAll('#drw-check-items-list .dyn-item')].map((el, i) => ({
+        id: i + 1,
+        name: el.querySelector('.drw-ci-name').value,
+        flowType: el.querySelector('.drw-ci-flow').value
+      }));
+    }
+  },
+  api: {
+    title: 'システム連携の編集',
+    render: function(container) {
+      container.innerHTML = `
+        <div class="form-group">
+          <label class="form-label">登録先システム名</label>
+          <input type="text" id="drw-api-system-name" value="${esc(config.apiSystemName || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">通信方式</label>
+          <select id="drw-api-method"><option value="post" ${config.apiMethod==='post'?'selected':''}>POST（登録・更新）</option><option value="get" ${config.apiMethod==='get'?'selected':''}>GET（参照のみ）</option><option value="put" ${config.apiMethod==='put'?'selected':''}>PUT（上書き更新）</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">接続先URL</label>
+          <input type="url" id="drw-api-url" value="${esc(config.apiUrl)}">
+        </div>
+        <div style="margin:20px 0 8px;font-size:14px;font-weight:600;color:var(--gray-700)">登録するデータ項目</div>
+        <div class="form-hint" style="margin-bottom:14px">項目名・説明を設定すると、AIが審査結果から自動的に値を抽出します。</div>
+        <div class="dyn-list" id="drw-params-list">
+          ${config.extractionParams.map((p, i) => `
+            <div class="dyn-item" data-idx="${i}">
+              <div class="item-id">${i + 1}</div>
+              <div class="item-content">
+                <div class="item-row">
+                  <input type="text" class="drw-ep-name" value="${esc(p.name)}" placeholder="項目名（英語）" style="max-width:180px">
+                  <label class="checkbox-row"><input type="checkbox" class="drw-ep-req" ${p.required ? 'checked' : ''}> 必須</label>
+                </div>
+                <textarea class="drw-ep-desc" rows="2" placeholder="AIへの抽出指示">${esc(p.desc)}</textarea>
+              </div>
+              <div class="item-actions"><button class="btn-icon" onclick="drwRemoveParam(${i})" title="削除">\u2716</button></div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="dyn-add"><button onclick="drwAddParam()">+ データ項目を追加</button></div>
+      `;
+    },
+    read: function() {
+      config.apiSystemName = document.getElementById('drw-api-system-name').value;
+      config.apiMethod = document.getElementById('drw-api-method').value;
+      config.apiUrl = document.getElementById('drw-api-url').value;
+      config.extractionParams = [...document.querySelectorAll('#drw-params-list .dyn-item')].map(el => ({
+        name: el.querySelector('.drw-ep-name').value,
+        desc: el.querySelector('.drw-ep-desc').value,
+        required: el.querySelector('.drw-ep-req').checked
+      }));
+    }
+  }
+};
+
+function openDrawer(sectionKey) {
+  currentDrawerSection = sectionKey;
+  const cfg = DRAWER_CONFIGS[sectionKey];
+  if (!cfg) return;
+  document.getElementById('drawer-title').textContent = cfg.title;
+  const body = document.getElementById('drawer-body');
+  cfg.render(body);
+  document.getElementById('drawer-backdrop').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  document.getElementById('drawer-backdrop').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  document.body.style.overflow = '';
+  currentDrawerSection = null;
+}
+
+function saveDrawerAndClose() {
+  if (currentDrawerSection && DRAWER_CONFIGS[currentDrawerSection]) {
+    DRAWER_CONFIGS[currentDrawerSection].read();
+  }
+  closeDrawer();
+  // Re-render review accordion to reflect changes
+  renderReviewAccordion();
+}
+
+// ===== Drawer dynamic list helpers =====
+// Check criteria
+function drwReadCheckCriteria() {
+  config.checkCriteria = [...document.querySelectorAll('#drw-check-criteria-list .dyn-item')].map(el => ({
+    name: el.querySelector('.drw-cc-name').value,
+    rule: el.querySelector('.drw-cc-rule').value,
+    blocking: el.querySelector('.drw-cc-block').checked,
+    enabled: el.querySelector('.drw-cc-enabled').checked
+  }));
+}
+function drwAddCheckCriteria() {
+  drwReadCheckCriteria();
+  config.checkCriteria.push({name:'',rule:'',blocking:false,enabled:true});
+  DRAWER_CONFIGS.checks.render(document.getElementById('drawer-body'));
+}
+function drwRemoveCheckCriteria(i) {
+  drwReadCheckCriteria();
+  config.checkCriteria.splice(i, 1);
+  DRAWER_CONFIGS.checks.render(document.getElementById('drawer-body'));
+}
+
+// Return comments
+function drwReadReturnComments() {
+  config.returnComments = [...document.querySelectorAll('#drw-return-comments-list .dyn-item')].map((el, i) => ({
+    id: i + 1,
+    text: el.querySelector('.drw-rc-text').value,
+    flowType: el.querySelector('.drw-rc-flow').value
+  }));
+}
+function drwAddReturnComment() {
+  drwReadReturnComments();
+  const nid = config.returnComments.length + 1;
+  config.returnComments.push({id:nid,text:'',flowType:'document_check'});
+  DRAWER_CONFIGS.comments.render(document.getElementById('drawer-body'));
+}
+function drwRemoveReturnComment(i) {
+  drwReadReturnComments();
+  config.returnComments.splice(i, 1);
+  config.returnComments.forEach((c, j) => c.id = j + 1);
+  DRAWER_CONFIGS.comments.render(document.getElementById('drawer-body'));
+}
+
+// Check items
+function drwReadCheckItems() {
+  config.checkItems = [...document.querySelectorAll('#drw-check-items-list .dyn-item')].map((el, i) => ({
+    id: i + 1,
+    name: el.querySelector('.drw-ci-name').value,
+    flowType: el.querySelector('.drw-ci-flow').value
+  }));
+}
+function drwAddCheckItem() {
+  drwReadCheckItems();
+  const nid = config.checkItems.length + 1;
+  config.checkItems.push({id:nid,name:'',flowType:'document_check'});
+  DRAWER_CONFIGS.items.render(document.getElementById('drawer-body'));
+}
+function drwRemoveCheckItem(i) {
+  drwReadCheckItems();
+  config.checkItems.splice(i, 1);
+  config.checkItems.forEach((c, j) => c.id = j + 1);
+  DRAWER_CONFIGS.items.render(document.getElementById('drawer-body'));
+}
+
+// Extraction params
+function drwReadParams() {
+  config.extractionParams = [...document.querySelectorAll('#drw-params-list .dyn-item')].map(el => ({
+    name: el.querySelector('.drw-ep-name').value,
+    desc: el.querySelector('.drw-ep-desc').value,
+    required: el.querySelector('.drw-ep-req').checked
+  }));
+}
+function drwAddParam() {
+  drwReadParams();
+  config.extractionParams.push({name:'',desc:'',required:false});
+  DRAWER_CONFIGS.api.render(document.getElementById('drawer-body'));
+}
+function drwRemoveParam(i) {
+  drwReadParams();
+  config.extractionParams.splice(i, 1);
+  DRAWER_CONFIGS.api.render(document.getElementById('drawer-body'));
+}
+
+// ===== Keyboard: Escape closes drawer =====
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && currentDrawerSection) closeDrawer();
+});
+
+// =====================================================================
+// Excel Import
+// =====================================================================
+function handleExcelDrop(event) {
+  const file = event.dataTransfer.files[0];
+  if (file) processExcelFile(file);
+}
+
+function handleExcelUpload(input) {
+  const file = input.files[0];
+  if (file) processExcelFile(file);
+}
+
+function processExcelFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array'});
+      const result = parseExcelWorkbook(workbook);
+      if (result.errors.length > 0) {
+        showExcelResult(false, result.errors);
+      } else {
+        // Apply parsed data to config
+        applyExcelToConfig(result.data);
+        showExcelResult(true, [], result.summary);
+      }
+    } catch (err) {
+      showExcelResult(false, ['ファイルの読み取りに失敗しました: ' + err.message]);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseExcelWorkbook(workbook) {
+  const errors = [];
+  const data = {};
+  const summary = {};
+
+  // Sheet name mapping (flexible matching)
+  const sheetNames = workbook.SheetNames;
+  const findSheet = (keyword) => sheetNames.find(s => s.includes(keyword));
+
+  const basicSheet = findSheet('基本設定') || sheetNames[0];
+  const checksSheet = findSheet('チェック観点') || sheetNames[1];
+  const commentsSheet = findSheet('差戻し') || sheetNames[2];
+  const itemsSheet = findSheet('チェック項目') || sheetNames[3];
+  const apiSheet = findSheet('データ連携') || sheetNames[4];
+
+  // === Sheet 1: Basic Settings (vertical key-value layout) ===
+  if (basicSheet && workbook.Sheets[basicSheet]) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[basicSheet], {header: 1});
+    const kvMap = {};
+    rows.forEach(row => {
+      if (row[0]) kvMap[String(row[0]).trim()] = row[1] != null ? String(row[1]).trim() : '';
+    });
+    data.name = kvMap['業務名'] || kvMap['業務名称'] || '';
+    data.desc = kvMap['業務の説明'] || kvMap['業務説明'] || kvMap['説明'] || '';
+    data.apiSystemName = kvMap['登録先システム名'] || kvMap['システム名'] || '';
+    data.apiUrl = kvMap['接続先URL'] || kvMap['URL'] || kvMap['接続先'] || '';
+    const methodRaw = kvMap['通信方式'] || kvMap['HTTPメソッド'] || 'POST';
+    data.apiMethod = methodRaw.toLowerCase().trim();
+    if (!['post', 'get', 'put'].includes(data.apiMethod)) data.apiMethod = 'post';
+
+    if (!data.name) errors.push('シート「基本設定」: 業務名が未入力です');
+    summary.basic = data.name;
+  } else {
+    errors.push('シート「基本設定」が見つかりません');
+  }
+
+  // === Sheet 2: Check Criteria ===
+  if (checksSheet && workbook.Sheets[checksSheet]) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[checksSheet], {header: 1});
+    data.checkCriteria = [];
+    // Skip header row
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[0]) continue; // skip empty rows
+      const name = String(row[0] || '').trim();
+      const rule = String(row[1] || '').trim();
+      const blocking = String(row[2] || '').trim();
+      const enabled = String(row[3] || '').trim();
+      if (!name) continue;
+      if (!rule) {
+        errors.push(`シート「チェック観点」行${i + 1}: OK/NGルールが未入力です`);
+        continue;
+      }
+      data.checkCriteria.push({
+        name: name,
+        rule: rule,
+        blocking: blocking === '○' || blocking === 'TRUE' || blocking === 'true' || blocking === '1',
+        enabled: enabled === '' || enabled === '○' || enabled === 'TRUE' || enabled === 'true' || enabled === '1'
+      });
+    }
+    if (data.checkCriteria.length === 0) {
+      errors.push('シート「チェック観点」: チェック観点を1つ以上入力してください');
+    }
+    summary.checks = data.checkCriteria.length;
+  } else {
+    errors.push('シート「チェック観点」が見つかりません');
+  }
+
+  // === Sheet 3: Return Comments ===
+  if (commentsSheet && workbook.Sheets[commentsSheet]) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[commentsSheet], {header: 1});
+    data.returnComments = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || (!row[0] && !row[1])) continue;
+      const text = String(row[1] || '').trim();
+      const flowRaw = String(row[2] || '').trim();
+      if (!text) {
+        errors.push(`シート「差戻しコメント」行${i + 1}: コメント文が未入力です`);
+        continue;
+      }
+      let flowType = 'document_check';
+      if (flowRaw.includes('データ') || flowRaw.includes('不一致')) {
+        flowType = 'data_verification';
+      }
+      data.returnComments.push({
+        id: data.returnComments.length + 1,
+        text: text,
+        flowType: flowType
+      });
+    }
+    summary.comments = data.returnComments.length;
+  } else {
+    // Not critical - can use empty array
+    data.returnComments = [];
+    summary.comments = 0;
+  }
+
+  // === Sheet 4: Check Items ===
+  if (itemsSheet && workbook.Sheets[itemsSheet]) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[itemsSheet], {header: 1});
+    data.checkItems = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || (!row[0] && !row[1])) continue;
+      const name = String(row[1] || '').trim();
+      const flowRaw = String(row[2] || '').trim();
+      if (!name) {
+        errors.push(`シート「チェック項目」行${i + 1}: チェック項目名が未入力です`);
+        continue;
+      }
+      let flowType = 'document_check';
+      if (flowRaw.includes('データ') || flowRaw.includes('不一致')) {
+        flowType = 'data_verification';
+      }
+      data.checkItems.push({
+        id: data.checkItems.length + 1,
+        name: name,
+        flowType: flowType
+      });
+    }
+    summary.items = data.checkItems.length;
+  } else {
+    data.checkItems = [];
+    summary.items = 0;
+  }
+
+  // === Sheet 5: Data Integration (optional) ===
+  if (apiSheet && workbook.Sheets[apiSheet]) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[apiSheet], {header: 1});
+    data.extractionParams = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || !row[0]) continue;
+      const pname = String(row[0] || '').trim();
+      const desc = String(row[1] || '').trim();
+      const req = String(row[2] || '').trim();
+      if (!pname) continue;
+      // Warn if param name contains full-width characters
+      if (/[^\x00-\x7F]/.test(pname)) {
+        errors.push(`シート「データ連携」行${i + 1}: 項目名「${pname}」は半角英数で入力してください`);
+        continue;
+      }
+      data.extractionParams.push({
+        name: pname,
+        desc: desc,
+        required: req === '○' || req === 'TRUE' || req === 'true' || req === '1'
+      });
+    }
+    summary.params = data.extractionParams.length;
+  } else {
+    data.extractionParams = [];
+    summary.params = 0;
+  }
+
+  return {errors, data, summary};
+}
+
+function applyExcelToConfig(data) {
+  // Keep model/provider/temperature from template defaults
+  config.name = data.name || config.name;
+  config.desc = data.desc || config.desc;
+  config.apiSystemName = data.apiSystemName || config.apiSystemName;
+  config.apiUrl = data.apiUrl || config.apiUrl;
+  config.apiMethod = data.apiMethod || config.apiMethod;
+
+  if (data.checkCriteria && data.checkCriteria.length > 0) {
+    config.checkCriteria = data.checkCriteria;
+  }
+  if (data.returnComments && data.returnComments.length > 0) {
+    config.returnComments = data.returnComments;
+  }
+  if (data.checkItems && data.checkItems.length > 0) {
+    config.checkItems = data.checkItems;
+  }
+  if (data.extractionParams && data.extractionParams.length > 0) {
+    config.extractionParams = data.extractionParams;
+  }
+}
+
+function showExcelResult(success, errors, summary) {
+  const resultDiv = document.getElementById('excel-import-result');
+  const statusDiv = document.getElementById('excel-import-status');
+  const previewDiv = document.getElementById('excel-import-preview');
+  resultDiv.style.display = 'block';
+
+  if (!success) {
+    statusDiv.innerHTML = `
+      <div style="background:var(--red-light);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:16px 20px">
+        <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:8px">⚠ インポートエラー</div>
+        <ul style="list-style:none;padding:0;margin:0">
+          ${errors.map(e => `<li style="font-size:13px;color:var(--red);padding:3px 0;display:flex;gap:6px"><span>・</span>${esc(e)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+    previewDiv.innerHTML = '';
+    document.getElementById('btn-excel-generate').style.display = 'none';
+    document.getElementById('btn-excel-review').style.display = 'none';
+  } else {
+    statusDiv.innerHTML = `
+      <div style="background:var(--green-light);border:1px solid #6ee7b7;border-radius:var(--radius-sm);padding:16px 20px">
+        <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px">✅ インポート成功</div>
+        <div style="font-size:13px;color:var(--gray-600)">業務ルールを読み込みました。内容を確認して生成に進んでください。</div>
+      </div>
+    `;
+    previewDiv.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${summary.checks || 0}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">チェック観点</div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${summary.comments || 0}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">差戻しコメント</div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${summary.items || 0}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">チェック項目</div>
+        </div>
+        <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:16px;text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--primary)">${summary.params || 0}</div>
+          <div style="font-size:12px;color:var(--gray-500);margin-top:4px">データ連携項目</div>
+        </div>
+      </div>
+    `;
+    document.getElementById('btn-excel-generate').style.display = '';
+    document.getElementById('btn-excel-review').style.display = '';
+  }
+}
+
+// ===== Template Excel Download =====
+function downloadTemplateExcel() {
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Basic Settings (vertical key-value)
+  const basicData = [
+    ['業務名', config.name || '書面審査業務'],
+    ['業務の説明', config.desc || ''],
+    ['登録先システム名', config.apiSystemName || ''],
+    ['接続先URL', config.apiUrl || ''],
+    ['通信方式', (config.apiMethod || 'post').toUpperCase()]
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(basicData);
+  ws1['!cols'] = [{wch: 20}, {wch: 60}];
+  XLSX.utils.book_append_sheet(wb, ws1, '①基本設定');
+
+  // Sheet 2: Check Criteria
+  const checksHeader = ['チェック観点名', 'OK/NGルール', 'ブロッキング', '有効'];
+  const checksData = [checksHeader];
+  (config.checkCriteria || []).forEach(c => {
+    checksData.push([c.name, c.rule, c.blocking ? '○' : '', c.enabled !== false ? '○' : '']);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(checksData);
+  ws2['!cols'] = [{wch: 18}, {wch: 60}, {wch: 12}, {wch: 8}];
+  XLSX.utils.book_append_sheet(wb, ws2, '②チェック観点');
+
+  // Sheet 3: Return Comments
+  const commentsHeader = ['No.', '差戻しコメント', '分類'];
+  const commentsData = [commentsHeader];
+  (config.returnComments || []).forEach(c => {
+    commentsData.push([c.id, c.text, c.flowType === 'data_verification' ? 'データ不一致' : '書面不備']);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(commentsData);
+  ws3['!cols'] = [{wch: 6}, {wch: 70}, {wch: 14}];
+  XLSX.utils.book_append_sheet(wb, ws3, '③差戻しコメント');
+
+  // Sheet 4: Check Items
+  const itemsHeader = ['No.', 'チェック項目名', '分類'];
+  const itemsData = [itemsHeader];
+  (config.checkItems || []).forEach(c => {
+    itemsData.push([c.id, c.name, c.flowType === 'data_verification' ? 'データ不一致' : '書面不備']);
+  });
+  const ws4 = XLSX.utils.aoa_to_sheet(itemsData);
+  ws4['!cols'] = [{wch: 6}, {wch: 40}, {wch: 14}];
+  XLSX.utils.book_append_sheet(wb, ws4, '④チェック項目');
+
+  // Sheet 5: Data Integration
+  const paramsHeader = ['項目名（英語）', '抽出ルール', '必須'];
+  const paramsData = [paramsHeader];
+  (config.extractionParams || []).forEach(p => {
+    paramsData.push([p.name, p.desc, p.required ? '○' : '']);
+  });
+  const ws5 = XLSX.utils.aoa_to_sheet(paramsData);
+  ws5['!cols'] = [{wch: 20}, {wch: 60}, {wch: 8}];
+  XLSX.utils.book_append_sheet(wb, ws5, '⑤データ連携');
+
+  // Download
+  XLSX.writeFile(wb, `${config.name || '業務ルール'}_テンプレート.xlsx`);
+}
+
+// =====================================================================
+// Step 3: DSL Generation
+// =====================================================================
+function generateDSLs() {
+  // Filter checkCriteria by enabled
+  const activeCheckCriteria = config.checkCriteria.filter(c => c.enabled);
+
+  // Build return comments string for prompts
+  const rcStr = config.returnComments.map(c => `${c.id}:${c.text}`).join('\n');
+  const ciStr = config.checkItems.map(c => `${c.id}: "${c.name}"`).join('\n');
+  const dcIds = config.checkItems.filter(c => c.flowType === 'document_check').map(c => c.id);
+  const dvIds = config.checkItems.filter(c => c.flowType === 'data_verification').map(c => c.id);
+
+  // Build check criteria prompt section (only enabled items)
+  const checkPromptItems = activeCheckCriteria.map(c => `\u30FB${c.name}: ${c.rule}`).join('\n');
+
+  // Temporarily set config.checkCriteria to only enabled items for DSL generation
+  const allCriteria = config.checkCriteria;
+  config.checkCriteria = activeCheckCriteria;
+
+  // --- judgment_tool DSL ---
+  const rcCategorized = buildCategorizedComments();
+  generatedDSLs['judgment_tool'] = {
+    filename: `BPaaS_${config.name}_判定ツール.yml`,
+    label: '判定ツール',
+    content: buildJudgmentDSL(rcCategorized)
+  };
+
+  // --- registration_tool DSL ---
+  generatedDSLs['registration_tool'] = {
+    filename: `BPaaS_${config.name}_結果登録ツール.yml`,
+    label: '結果登録ツール',
+    content: buildRegistrationDSL()
+  };
+
+  // --- check_tool DSL ---
+  generatedDSLs['check_tool'] = {
+    filename: `BPaaS_${config.name}_チェックツール.yml`,
+    label: 'チェックツール',
+    content: buildCheckToolDSL(rcStr, ciStr, dcIds, dvIds, checkPromptItems)
+  };
+
+  // --- orchestrator DSL ---
+  generatedDSLs['orchestrator'] = {
+    filename: `BPaaS_${config.name}_オーケストレータ.yml`,
+    label: 'オーケストレータ',
+    content: buildOrchestratorDSL()
+  };
+
+  // Restore full criteria list
+  config.checkCriteria = allCriteria;
+
+  renderPreview();
+}
+
+function buildCategorizedComments() {
+  const lines = [];
+  config.returnComments.forEach(c => {
+    lines.push(`\u30FB${c.text}`);
+  });
+  return lines.join('\n');
+}
+
+function buildJudgmentDSL(commentsText) {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_判定ツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: llm
+      id: start-llm
+      source: 'start_node'
+      sourceHandle: source
+      target: 'llm_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: end
+      id: llm-end
+      source: 'llm_node'
+      sourceHandle: source
+      target: 'end_node'
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - label: prompt
+          max_length: 50000
+          required: true
+          type: paragraph
+          variable: prompt
+      id: 'start_node'
+      type: custom
+    - data:
+        context:
+          enabled: false
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        prompt_template:
+        - id: judgment-prompt
+          role: system
+          text: >-
+            {{#start_node.prompt#}}は、${config.name}における確認結果レポートです。
+
+            下記の差戻しコメント一覧にあるコメントのいずれかに該当する場合は、該当する差戻しコメントを添えて差戻しとしてください。
+
+            **差戻しコメントはそのまま引用し、内容の要約や改変はしないでください。**
+
+            【差戻しコメント一覧】
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+
+            確認結果について、特段問題がなく、かつ差戻しコメント一覧の中に該当する差戻しコメントがない場合は承認としてください。
+
+            **差戻しコメント一覧に該当する差戻しコメントがない場合でも、書面の内容に問題がある旨の記載があれば差戻しとしてください。**
+
+            出力については、下記のフォーマットに従ってください。
+            **フォーマットは必ず守ってください**
+
+            ------------------------------------------------
+            ■ ツール実行結果
+            ・正常終了の場合は"SUCCESS"、異常終了の場合は"FAILED"を出力
+
+            ■ 書面審査結果
+            ・承認の場合は"承認"、差戻しの場合は"差戻し"
+
+            ・差戻しコメント(差戻しとなった場合にのみ出力)
+            ------------------------------------------------
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      id: 'llm_node'
+      type: custom
+    - data:
+        outputs:
+        - value_selector:
+          - 'llm_node'
+          - text
+          value_type: string
+          variable: result
+        title: 終了
+        type: end
+      id: 'end_node'
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+function buildRegistrationDSL() {
+  const paramsYaml = config.extractionParams.map(p => `        - description: '${p.desc.replace(/'/g,"''")}'
+          name: ${p.name}
+          required: ${p.required}
+          type: string`).join('\n');
+
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_結果登録ツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: parameter-extractor
+      id: start-pe
+      source: 'start_node'
+      sourceHandle: source
+      target: 'pe_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: parameter-extractor
+        targetType: llm
+      id: pe-llm
+      source: 'pe_node'
+      sourceHandle: source
+      target: 'llm_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: code
+      id: llm-code
+      source: 'llm_node'
+      sourceHandle: source
+      target: 'code_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: code
+        targetType: http-request
+      id: code-http
+      source: 'code_node'
+      sourceHandle: source
+      target: 'http_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: http-request
+        targetType: end
+      id: http-end
+      source: 'http_node'
+      sourceHandle: source
+      target: 'end_node'
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - label: prompt
+          max_length: 50000
+          required: true
+          type: paragraph
+          variable: prompt
+      id: 'start_node'
+      type: custom
+    - data:
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        parameters:
+${paramsYaml}
+        query:
+        - 'start_node'
+        - prompt
+        reasoning_mode: prompt
+        title: パラメータ抽出
+        type: parameter-extractor
+      id: 'pe_node'
+      type: custom
+    - data:
+        context:
+          enabled: false
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        prompt_template:
+        - id: meta-prompt
+          role: system
+          text: 'パラメータ抽出結果を参照して、メタデータJSONを生成してください。'
+        title: metadata生成
+        type: llm
+        vision:
+          enabled: false
+      id: 'llm_node'
+      type: custom
+    - data:
+        code: |
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          def main():
+              return {"now_datetime": str(datetime.now(ZoneInfo("Asia/Tokyo")))}
+        code_language: python3
+        outputs:
+          now_datetime:
+            type: string
+        title: 現在時刻取得
+        type: code
+      id: 'code_node'
+      type: custom
+    - data:
+        authorization:
+          type: no-auth
+        body:
+          type: json
+        method: ${config.apiMethod}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        title: HTTPリクエスト
+        type: http-request
+        url: ${config.apiUrl}
+      id: 'http_node'
+      type: custom
+    - data:
+        outputs:
+        - value_selector:
+          - 'http_node'
+          - status_code
+          value_type: number
+          variable: result
+        title: 終了
+        type: end
+      id: 'end_node'
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+function buildCheckToolDSL(rcStr, ciStr, dcIds, dvIds, checkPromptItems) {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_チェックツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: kalochin/pdf_process:1.0.0@052e5c10b080c86e949055c64575647737c2e14947b0b1bc87a44d1c6ed0f1de
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: true
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+  graph:
+    edges:
+    - {id: e1, source: start, sourceHandle: source, target: pe, targetHandle: target, type: custom}
+    - {id: e2, source: pe, sourceHandle: source, target: http_get, targetHandle: target, type: custom}
+    - {id: e3, source: http_get, sourceHandle: source, target: pdf_tool, targetHandle: target, type: custom}
+    - {id: e4, source: pdf_tool, sourceHandle: source, target: llm_check, targetHandle: target, type: custom}
+    - {id: e5, source: llm_check, sourceHandle: source, target: llm_rc, targetHandle: target, type: custom}
+    - {id: e6, source: llm_rc, sourceHandle: source, target: llm_ci, targetHandle: target, type: custom}
+    - {id: e7, source: llm_ci, sourceHandle: source, target: code_merge, targetHandle: target, type: custom}
+    - {id: e8, source: code_merge, sourceHandle: source, target: end_ok, targetHandle: target, type: custom}
+    - {id: e9, source: http_get, sourceHandle: fail-branch, target: llm_notfound, targetHandle: target, type: custom}
+    - {id: e10, source: llm_notfound, sourceHandle: source, target: llm_rc2, targetHandle: target, type: custom}
+    - {id: e11, source: llm_rc2, sourceHandle: source, target: llm_ci2, targetHandle: target, type: custom}
+    - {id: e12, source: llm_ci2, sourceHandle: source, target: code_merge2, targetHandle: target, type: custom}
+    - {id: e13, source: code_merge2, sourceHandle: source, target: end_fail, targetHandle: target, type: custom}
+    nodes:
+    - {id: start, data: {title: 開始, type: start, variables: [{label: prompt, max_length: 50000, type: paragraph, variable: prompt}]}}
+    - id: pe
+      data:
+        instruction: '入力データを参照し、署名付きURLを抜き出してください。'
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        parameters:
+        - {name: presigned_url, type: string, required: false, description: URL}
+        query: [start, prompt]
+        reasoning_mode: prompt
+        title: パラメータ抽出
+        type: parameter-extractor
+    - id: http_get
+      data:
+        method: get
+        url: '{{#pe.presigned_url#}}'
+        error_strategy: fail-branch
+        retry_config: {max_retries: 3, retry_enabled: true, retry_interval: 100}
+        title: HTTPリクエスト
+        type: http-request
+    - id: pdf_tool
+      data:
+        title: PDF to PNG
+        type: tool
+        tool_name: pdf_to_png
+        provider_name: kalochin/pdf_process/pdf_process
+    - id: llm_check
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            入力データと書面画像を突合して下記の観点でチェックしてください。
+
+${config.checkCriteria.map(c => '            ' + c.name + ': ' + c.rule.replace(/\n/g, ' ')).join('\n')}
+
+            確認結果は下記のフォーマットで出力してください。
+            ---------------------------------------------------------
+            ■ ツール実行結果
+            ・正常終了の場合は"SUCCESS"、異常終了の場合は"FAILED"を出力
+            ■ チェック結果
+            各項目を箇条書きにして、比較した値を明示したうえで相違の有無を出力してください。
+        title: 書面チェック
+        type: llm
+        vision: {enabled: true}
+    - id: llm_rc
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果から差戻しコメントIDを判定してください。
+
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+
+            フロー種別: document_check=[${dcIds.join(',')}] / data_verification=[${dvIds.join(',')}]
+        title: 差戻しコメントID判定
+        type: llm
+    - id: llm_ci
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果からチェック項目IDを判定してください。
+
+${config.checkItems.map(c => '            ' + c.id + ': "' + c.name + '"').join('\n')}
+
+            フロー種別: document_check=[${dcIds.join(',')}] / data_verification=[${dvIds.join(',')}]
+        title: チェック項目ID判定
+        type: llm
+    - id: code_merge
+      data:
+        code: |
+          def main(a: str, b: str, c: str):
+              return {"result": a + b + c}
+        code_language: python3
+        outputs: {result: {type: string}}
+        title: 結果結合
+        type: code
+    - {id: end_ok, data: {title: 終了, type: end, outputs: [{value_selector: [code_merge, result], value_type: string, variable: result}]}}
+    - id: llm_notfound
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - {role: system, text: '■ ツール実行結果\\nSUCCESS\\n■ チェック結果\\n書類未添付'}
+        title: 書面未添付
+        type: llm
+    - id: llm_rc2
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果から差戻しコメントIDを判定してください。
+
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+        title: 差戻しコメントID判定
+        type: llm
+    - id: llm_ci2
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果からチェック項目IDを判定してください。
+
+${config.checkItems.map(c => '            ' + c.id + ': "' + c.name + '"').join('\n')}
+        title: チェック項目ID判定
+        type: llm
+    - id: code_merge2
+      data:
+        code: |
+          def main(a: str, b: str, c: str):
+              return {"result": a + b + c}
+        code_language: python3
+        outputs: {result: {type: string}}
+        title: 結果結合
+        type: code
+    - {id: end_fail, data: {title: 終了, type: end, outputs: [{value_selector: [code_merge2, result], value_type: string, variable: result}]}}
+  rag_pipeline_variables: []`;
+}
+
+function buildOrchestratorDSL() {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_オーケストレータ
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+  graph:
+    edges:
+    - {id: e1, source: start, sourceHandle: source, target: agent, targetHandle: target, type: custom}
+    - {id: e2, source: agent, sourceHandle: source, target: end, targetHandle: target, type: custom}
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - {label: プロンプト, max_length: 500000, required: true, type: paragraph, variable: prompt}
+      id: start
+      type: custom
+    - data:
+        agent_parameters:
+          instruction:
+            type: constant
+            value: >-
+              あなたは${config.name}を遂行するために、必要なツールを実行する役割を担っています。
+
+              用意しているツールの一覧:
+              ①: チェックツール - 書面の不備がないかチェックする
+              ②: 判定ツール - チェック結果から承認/差戻しを判定する
+              ③: 結果登録ツール - 処理結果をデータベースに登録する
+
+              基本的には①→②→③の順番で実行します。
+          maximum_iterations:
+            type: constant
+            value: 30
+          model:
+            type: constant
+            value:
+              mode: chat
+              model: ${config.model}
+              provider: ${config.provider}
+              type: model-selector
+          query:
+            type: constant
+            value: >-
+              必要なツールを順番に実行してください。
+              最終的な結果出力:
+              ■ オーケストレータ処理結果 (SUCCESS/FAILED)
+              ■ チェック結果
+              ■ 審査結果 (承認/差戻し)
+          tools:
+            type: constant
+            value:
+            - enabled: true
+              provider_name: REPLACE_WITH_CHECK_TOOL_UUID
+              provider_show_name: チェックツール
+              tool_label: チェックツール
+              tool_name: check_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+            - enabled: true
+              provider_name: REPLACE_WITH_JUDGMENT_TOOL_UUID
+              provider_show_name: 判定ツール
+              tool_label: 判定ツール
+              tool_name: judgment_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+            - enabled: true
+              provider_name: REPLACE_WITH_REGISTRATION_TOOL_UUID
+              provider_show_name: 結果登録ツール
+              tool_label: 結果登録ツール
+              tool_name: registration_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+        agent_strategy_label: ReAct
+        agent_strategy_name: ReAct
+        agent_strategy_provider_name: langgenius/agent/agent
+        title: エージェント
+        type: agent
+      id: agent
+      type: custom
+    - data:
+        outputs:
+        - {value_selector: [agent, text], value_type: string, variable: result}
+        title: 終了
+        type: end
+      id: end
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+// =====================================================================
+// Preview & Download
+// =====================================================================
+function renderPreview() {
+  const tabs = document.getElementById('preview-tabs');
+  const btns = document.getElementById('download-btns');
+  const keys = Object.keys(generatedDSLs);
+  tabs.innerHTML = keys.map((k, i) => `<button class="preview-tab ${i===0?'active':''}" data-key="${k}">${generatedDSLs[k].label}</button>`).join('');
+  btns.innerHTML = keys.map(k => `<button class="btn btn-secondary btn-sm" onclick="downloadOne('${k}')">\u2B07 ${generatedDSLs[k].label}</button>`).join('');
+  tabs.querySelectorAll('.preview-tab').forEach(t => t.addEventListener('click', () => {
+    tabs.querySelectorAll('.preview-tab').forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+    showPreview(t.dataset.key);
+  }));
+  showPreview(keys[0]);
+}
+
+function showPreview(key) {
+  const area = document.getElementById('preview-area');
+  area.textContent = generatedDSLs[key].content;
+}
+
+function downloadOne(key) {
+  const dsl = generatedDSLs[key];
+  const blob = new Blob([dsl.content], {type: 'application/x-yaml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = dsl.filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadAll() {
+  Object.keys(generatedDSLs).forEach(k => downloadOne(k));
+}
+
+// =====================================================================
+// Init
+// =====================================================================
+renderCategories();
+</script>
+</body>
+</html>

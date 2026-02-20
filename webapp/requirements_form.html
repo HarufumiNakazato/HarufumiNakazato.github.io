@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>業務要件フォーム - BPaaS Agent Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#1e3a5f;--primary-light:#e8eef6;
+  --link:#2563eb;--link-light:#dbeafe;
+  --dark:#0f172a;--bg:#f8fafc;--white:#fff;
+  --gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-300:#cbd5e1;
+  --gray-400:#94a3b8;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;
+  --gray-800:#1e293b;--gray-900:#0f172a;
+  --green:#059669;--green-light:#d1fae5;
+  --red:#dc2626;--red-light:#fee2e2;
+  --orange:#d97706;--orange-light:#fef3c7;
+  --blue-50:#eff6ff;--blue-100:#dbeafe;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+  --transition:all .2s ease;
+}
+body{font-family:'Noto Sans JP','Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--gray-800);line-height:1.7;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Header */
+.header{background:var(--white);border-bottom:1px solid var(--gray-200);padding:0 32px;height:56px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
+.header h1{font-size:17px;font-weight:700;color:var(--dark);letter-spacing:-.02em}
+.header .badge{background:var(--purple-light);color:var(--purple);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.page{max-width:860px;margin:0 auto;padding:32px 24px 80px}
+
+/* Hero */
+.hero{text-align:center;padding:32px 0 28px}
+.hero h2{font-size:24px;font-weight:800;color:var(--gray-900);letter-spacing:-.03em}
+.hero p{font-size:14px;color:var(--gray-500);margin-top:8px}
+
+/* Section card */
+.section-card{background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);padding:24px 28px;margin-bottom:20px;box-shadow:var(--shadow)}
+.section-card h3{font-size:14px;font-weight:700;color:var(--gray-800);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* Form */
+.field-row{display:grid;grid-template-columns:120px 1fr;gap:8px 14px;align-items:start;margin-bottom:10px}
+.field-row:last-child{margin-bottom:0}
+.field-label{font-size:13px;font-weight:600;color:var(--gray-500);padding-top:10px}
+.field-input{
+  width:100%;padding:9px 12px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  font-size:13px;font-family:inherit;color:var(--gray-800);background:var(--white);transition:border-color .2s;
+}
+.field-input:focus{outline:none;border-color:var(--link);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.field-input::placeholder{color:var(--gray-300)}
+textarea.field-input{resize:vertical;min-height:50px;line-height:1.6}
+
+/* ===== Sample / Example styling ===== */
+.is-sample{color:var(--gray-400) !important}
+.is-sample::placeholder{color:var(--gray-300)}
+
+/* ===== Task Tabs ===== */
+.task-tabs{
+  display:flex;align-items:center;gap:0;
+  border-bottom:2px solid var(--gray-200);margin-bottom:0;overflow-x:auto;
+  padding:0 4px;
+}
+.task-tab{
+  padding:10px 18px;font-size:13px;font-weight:600;color:var(--gray-400);
+  background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all .15s;white-space:nowrap;font-family:inherit;
+  display:flex;align-items:center;gap:6px;
+}
+.task-tab:hover{color:var(--gray-600)}
+.task-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.task-tab .tab-num{
+  width:20px;height:20px;border-radius:50%;background:var(--gray-200);color:var(--gray-500);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+  transition:all .15s;
+}
+.task-tab.active .tab-num{background:var(--primary);color:var(--white)}
+.task-tab-add{
+  padding:8px 14px;font-size:13px;font-weight:600;color:var(--link);
+  background:none;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;
+  transition:all .15s;margin-left:4px;
+}
+.task-tab-add:hover{color:#1d4ed8}
+
+/* Task panel */
+.task-panel{display:none}
+.task-panel.active{display:block}
+.task-panel-inner{
+  background:var(--white);border:1px solid var(--gray-200);border-top:none;
+  border-radius:0 0 var(--radius) var(--radius);padding:24px 28px;box-shadow:var(--shadow);
+}
+
+/* Task header row */
+.task-header-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:18px;
+  padding-bottom:14px;border-bottom:1px solid var(--gray-100);
+}
+.task-name-input{
+  flex:1;padding:6px 0;border:none;font-size:16px;font-weight:700;color:var(--gray-900);
+  background:transparent;font-family:inherit;
+}
+.task-name-input:focus{outline:none}
+.task-name-input::placeholder{color:var(--gray-300);font-weight:500}
+.task-name-input.is-sample{color:var(--gray-400)}
+.task-delete-btn{
+  padding:6px 12px;border-radius:6px;border:1px solid var(--gray-200);background:var(--white);
+  color:var(--gray-400);cursor:pointer;font-size:12px;font-weight:600;transition:var(--transition);font-family:inherit;
+}
+.task-delete-btn:hover{background:var(--red-light);color:var(--red);border-color:var(--red)}
+
+/* Task description */
+.task-desc{margin-bottom:18px}
+.task-desc-label{font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:6px}
+.task-textarea{
+  width:100%;padding:10px 14px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  font-size:13px;font-family:inherit;color:var(--gray-800);background:var(--white);resize:vertical;
+  min-height:50px;line-height:1.6;transition:border-color .2s;
+}
+.task-textarea:focus{outline:none;border-color:var(--link);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.task-textarea::placeholder{color:var(--gray-300);font-size:12px}
+.task-textarea.is-sample{color:var(--gray-400)}
+
+/* Check items */
+.check-items-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.check-items-header span{font-size:13px;font-weight:600;color:var(--gray-600);display:flex;align-items:center;gap:6px}
+.check-items-count{font-size:12px;color:var(--gray-400);font-weight:500}
+
+.check-item{border:1px solid var(--gray-200);border-radius:var(--radius-sm);margin-bottom:10px;overflow:hidden}
+.check-item:last-child{margin-bottom:0}
+.check-item-header{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:var(--gray-50);border-bottom:1px solid var(--gray-100);
+}
+.check-item-num{
+  width:20px;height:20px;border-radius:50%;background:var(--link);color:var(--white);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;
+}
+.check-item-name{
+  flex:1;padding:2px 0;border:none;font-size:13px;font-weight:600;color:var(--gray-800);
+  background:transparent;font-family:inherit;
+}
+.check-item-name:focus{outline:none}
+.check-item-name::placeholder{color:var(--gray-300);font-weight:500}
+.check-item-name.is-sample{color:var(--gray-400)}
+.check-item-options{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.check-item-blocking{
+  font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;cursor:pointer;
+  border:1px solid var(--gray-300);color:var(--gray-400);background:var(--white);
+  transition:var(--transition);user-select:none;
+}
+.check-item-blocking.active{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.check-item-del{
+  width:22px;height:22px;border-radius:6px;border:none;background:transparent;
+  color:var(--gray-400);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:13px;transition:var(--transition);
+}
+.check-item-del:hover{background:var(--red-light);color:var(--red)}
+
+.check-item-body{padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.check-item-rule{
+  width:100%;padding:8px 10px;border:1px solid var(--gray-200);border-radius:6px;
+  font-size:12px;font-family:inherit;color:var(--gray-800);background:var(--white);
+  resize:vertical;min-height:40px;line-height:1.6;transition:border-color .2s;
+}
+.check-item-rule:focus{outline:none;border-color:var(--link)}
+.check-item-rule::placeholder{color:var(--gray-300);font-size:11px}
+.check-item-rule.is-sample{color:var(--gray-400)}
+.check-item-rule.rule-ok{border-left:3px solid var(--green)}
+.check-item-rule.rule-ng{border-left:3px solid var(--red)}
+.rule-row-label{font-size:11px;font-weight:600;color:var(--gray-400)}
+
+.add-check-item{padding:6px;text-align:center;margin-top:6px}
+.add-check-item button{
+  background:none;border:1px dashed var(--gray-300);padding:5px 14px;border-radius:6px;
+  color:var(--link);font-size:11px;font-weight:600;cursor:pointer;transition:var(--transition);font-family:inherit;
+}
+.add-check-item button:hover{background:var(--blue-50);border-color:var(--link)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:var(--transition);font-family:inherit}
+.btn-primary{background:var(--primary);color:var(--white)}
+.btn-primary:hover{background:#142a47}
+.btn-green{background:var(--green);color:var(--white)}
+.btn-green:hover{background:#047857}
+.btn-secondary{background:var(--white);color:var(--gray-700);border:1px solid var(--gray-300)}
+.btn-secondary:hover{background:var(--gray-50)}
+.btn-lg{padding:12px 28px;font-size:14px;border-radius:var(--radius)}
+
+/* Bottom actions */
+.bottom-actions{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--gray-200)}
+
+/* Preview */
+.preview-panel{display:none;background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:20px;overflow:hidden}
+.preview-panel.visible{display:block}
+.preview-header{padding:14px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between}
+.preview-header h3{font-size:14px;font-weight:700;color:var(--gray-800)}
+.preview-body{padding:20px}
+.struct-block{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px;font-size:12px}
+.struct-block:last-child{margin-bottom:0}
+.struct-title{font-weight:700;color:var(--gray-800);margin-bottom:6px}
+.struct-field{display:flex;gap:8px;padding:2px 0;color:var(--gray-600)}
+.struct-key{font-weight:600;color:var(--gray-500);min-width:90px;flex-shrink:0}
+.struct-value{flex:1;white-space:pre-wrap;word-break:break-word}
+.struct-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;margin-left:6px}
+.struct-badge.blocking{background:var(--red-light);color:var(--red)}
+
+/* Hint */
+.req-hint{font-size:11px;color:var(--gray-400);margin-bottom:6px;line-height:1.5}
+
+/* Sample banner */
+.sample-banner{
+  background:var(--orange-light);border:1px solid #fcd34d;border-radius:var(--radius-sm);
+  padding:10px 16px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.sample-banner-text{font-size:12px;color:var(--orange);font-weight:600}
+.sample-banner button{
+  padding:5px 12px;border-radius:6px;border:1px solid var(--orange);background:var(--white);
+  color:var(--orange);font-size:11px;font-weight:600;cursor:pointer;transition:var(--transition);font-family:inherit;
+}
+.sample-banner button:hover{background:var(--orange-light)}
+
+@media(max-width:640px){
+  .page{padding:16px}
+  .hero{padding:20px 0 16px}
+  .hero h2{font-size:20px}
+  .field-row{grid-template-columns:1fr;gap:4px 0}
+  .field-label{padding-top:0}
+  .task-panel-inner{padding:16px}
+  .section-card{padding:16px}
+  .task-tab{padding:8px 12px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>BPaaS Agent Builder</h1>
+  <span class="badge">業務要件フォーム</span>
+</div>
+
+<div class="page">
+
+  <div class="hero">
+    <h2>業務要件を書いてください</h2>
+    <p>タスクごとに確認項目のOK/NG条件を記述します。記載例がグレーで入っています。</p>
+  </div>
+
+  <!-- サンプル表示中バナー -->
+  <div class="sample-banner" id="sample-banner">
+    <span class="sample-banner-text">📝 記入例が表示されています。フォーカスすると消えます。</span>
+    <button onclick="clearAllSamples()">すべてクリア</button>
+  </div>
+
+  <!-- 業務の概要 -->
+  <div class="section-card">
+    <h3>📋 業務の概要</h3>
+    <div class="field-row">
+      <div class="field-label">業務名</div>
+      <input class="field-input" id="biz-name" type="text" placeholder="例: 注文書審査業務">
+    </div>
+    <div class="field-row">
+      <div class="field-label">業務の目的</div>
+      <textarea class="field-input" id="biz-purpose" rows="2" placeholder="例: 注文書の内容チェック・照合・承認判定を自動化し、工数を削減する。"></textarea>
+    </div>
+    <div class="field-row">
+      <div class="field-label">対象書面</div>
+      <input class="field-input" id="biz-document" type="text" placeholder="例: 注文書（取引先から受領）">
+    </div>
+  </div>
+
+  <!-- タスク（タブ表示） -->
+  <div class="section-card" style="padding:0;overflow:hidden">
+    <div style="padding:18px 24px 0">
+      <h3 style="margin-bottom:8px">🔧 自動化タスク <span class="check-items-count" id="task-count" style="margin-left:8px"></span></h3>
+    </div>
+    <div class="task-tabs" id="task-tabs"></div>
+    <div id="task-panels"></div>
+  </div>
+
+  <!-- 差戻しコメント -->
+  <div class="section-card">
+    <h3>💬 差戻しコメント一覧</h3>
+    <div class="req-hint">NGの場合に申請者へ通知するコメント文。1行に1つずつ書いてください。</div>
+    <textarea class="task-textarea" id="return-comments" rows="8" style="border-left:3px solid var(--orange)" placeholder="例:
+書面が未添付です。添付いただき、再申請して下さい。
+注文書の(控)・(仮)が添付されています。正式な注文書を入手次第、再申請して下さい。
+『契約金額』が注文書とデータで不一致です。"></textarea>
+  </div>
+
+  <!-- システム連携 -->
+  <div class="section-card">
+    <h3>🔗 結果の登録先</h3>
+    <div class="req-hint" style="margin-bottom:12px">審査結果をシステムに自動登録する場合。わからなければ空欄でOK。</div>
+    <div class="field-row">
+      <div class="field-label">システム名</div>
+      <input class="field-input" id="sys-name" type="text" placeholder="例: BPaaS 業務管理システム">
+    </div>
+    <div class="field-row">
+      <div class="field-label">接続先URL</div>
+      <input class="field-input" id="sys-url" type="url" placeholder="例: https://example.com/api/process">
+    </div>
+  </div>
+
+  <!-- 構造化プレビュー -->
+  <div class="preview-panel" id="preview-panel">
+    <div class="preview-header">
+      <h3>📐 構造化プレビュー</h3>
+      <button class="btn btn-secondary" style="padding:5px 12px;font-size:11px" onclick="togglePreview()">閉じる</button>
+    </div>
+    <div class="preview-body" id="preview-body"></div>
+  </div>
+
+  <div class="bottom-actions">
+    <button class="btn btn-secondary" onclick="togglePreview()">📐 構造化プレビュー</button>
+    <button class="btn btn-green btn-lg" onclick="generateFromRequirements()">この要件でDSLを生成 →</button>
+  </div>
+
+</div>
+
+<script>
+// =====================================================================
+// Data
+// =====================================================================
+let tasks = [];
+let activeTaskIdx = 0;
+let nextTaskId = 1;
+let nextItemId = 1;
+let isSampleLoaded = true; // Track whether sample data is shown
+
+function createTask(name, desc, items) {
+  return { id: nextTaskId++, name: name || '', description: desc || '', items: items || [createCheckItem()] };
+}
+function createCheckItem(name, okRule, ngRule, blocking) {
+  return { id: nextItemId++, name: name || '', okRule: okRule || '', ngRule: ngRule || '', blocking: !!blocking };
+}
+
+// =====================================================================
+// Render
+// =====================================================================
+function render() {
+  renderTabs();
+  renderActivePanel();
+  const totalItems = tasks.reduce((s, t) => s + t.items.length, 0);
+  document.getElementById('task-count').textContent = `${tasks.length} タスク・${totalItems} 確認項目`;
+}
+
+function renderTabs() {
+  const container = document.getElementById('task-tabs');
+  container.innerHTML = tasks.map((t, i) => `
+    <button class="task-tab ${i === activeTaskIdx ? 'active' : ''}" onclick="switchTab(${i})">
+      <span class="tab-num">${i + 1}</span>
+      ${esc(t.name) || 'タスク' + (i + 1)}
+    </button>
+  `).join('') + `<button class="task-tab-add" onclick="addTask()">＋ 追加</button>`;
+}
+
+function renderActivePanel() {
+  const container = document.getElementById('task-panels');
+  const task = tasks[activeTaskIdx];
+  if (!task) { container.innerHTML = ''; return; }
+  const s = isSampleLoaded; // sample flag
+
+  container.innerHTML = `
+    <div class="task-panel active">
+      <div class="task-panel-inner">
+        <!-- Task header -->
+        <div class="task-header-row">
+          <input class="task-name-input ${s && task.name ? 'is-sample' : ''}" type="text"
+                 value="${esc(task.name)}"
+                 placeholder="タスク名（例: 注文書と社内データの突合）"
+                 onfocus="clearSample(this)" oninput="updateTaskField('name', this.value)">
+          <button class="task-delete-btn" onclick="deleteTask()">削除</button>
+        </div>
+
+        <!-- Description -->
+        <div class="task-desc">
+          <div class="task-desc-label">📝 このタスクの概要</div>
+          <textarea class="task-textarea ${s && task.description ? 'is-sample' : ''}" rows="2"
+                    placeholder="例: 注文書の内容と社内データを突合し、各項目が一致しているか確認する。"
+                    onfocus="clearSample(this)" oninput="updateTaskField('description', this.value)">${esc(task.description)}</textarea>
+        </div>
+
+        <!-- Check items -->
+        <div class="check-items-header">
+          <span>🔍 確認項目</span>
+          <span class="check-items-count">${task.items.length} 項目</span>
+        </div>
+
+        ${task.items.map((item, iIdx) => renderCheckItem(item, iIdx)).join('')}
+
+        <div class="add-check-item">
+          <button onclick="addCheckItem()">＋ 確認項目を追加</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCheckItem(item, idx) {
+  const s = isSampleLoaded;
+  return `
+    <div class="check-item">
+      <div class="check-item-header">
+        <div class="check-item-num">${idx + 1}</div>
+        <input class="check-item-name ${s && item.name ? 'is-sample' : ''}" type="text"
+               value="${esc(item.name)}"
+               placeholder="確認項目名（例: 発注金額）"
+               onfocus="clearSample(this)" oninput="updateItemField(${item.id}, 'name', this.value)">
+        <div class="check-item-options">
+          <span class="check-item-blocking ${item.blocking ? 'active' : ''}"
+                onclick="toggleBlocking(${item.id})"
+                title="この項目がNGなら後続チェックを中止">
+            ${item.blocking ? '⚡ 最優先' : '最優先'}
+          </span>
+          <button class="check-item-del" onclick="deleteCheckItem(${item.id})" title="削除">✕</button>
+        </div>
+      </div>
+      <div class="check-item-body">
+        <div>
+          <div class="rule-row-label">✅ OKの条件</div>
+          <textarea class="check-item-rule rule-ok ${s && item.okRule ? 'is-sample' : ''}" rows="2"
+                    placeholder="例: 発注金額が突合データと一致していること。"
+                    onfocus="clearSample(this)" oninput="updateItemField(${item.id}, 'okRule', this.value)">${esc(item.okRule)}</textarea>
+        </div>
+        <div>
+          <div class="rule-row-label">❌ NGの条件</div>
+          <textarea class="check-item-rule rule-ng ${s && item.ngRule ? 'is-sample' : ''}" rows="2"
+                    placeholder="例: 金額が不一致。基本契約なしで100万円以上の場合もNG。"
+                    onfocus="clearSample(this)" oninput="updateItemField(${item.id}, 'ngRule', this.value)">${esc(item.ngRule)}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// =====================================================================
+// Sample data handling
+// =====================================================================
+function clearSample(el) {
+  if (el.classList.contains('is-sample')) {
+    el.classList.remove('is-sample');
+    // Clear the sample value so user starts fresh
+    if (el.tagName === 'TEXTAREA') {
+      el.value = '';
+      // Find which field this belongs to and clear it in data
+      const oninput = el.getAttribute('oninput');
+      if (oninput) {
+        // Trigger the oninput to sync cleared value to data
+        el.dispatchEvent(new Event('input'));
+      }
+    } else if (el.tagName === 'INPUT') {
+      el.value = '';
+      el.dispatchEvent(new Event('input'));
+    }
+  }
+}
+
+function clearAllSamples() {
+  isSampleLoaded = false;
+  // Clear all task data
+  tasks = [createTask()];
+  activeTaskIdx = 0;
+  // Clear overview fields
+  document.getElementById('biz-name').value = '';
+  document.getElementById('biz-name').classList.remove('is-sample');
+  document.getElementById('biz-purpose').value = '';
+  document.getElementById('biz-purpose').classList.remove('is-sample');
+  document.getElementById('biz-document').value = '';
+  document.getElementById('biz-document').classList.remove('is-sample');
+  document.getElementById('return-comments').value = '';
+  document.getElementById('return-comments').classList.remove('is-sample');
+  document.getElementById('sys-name').value = '';
+  document.getElementById('sys-url').value = '';
+  document.getElementById('sample-banner').style.display = 'none';
+  render();
+}
+
+// =====================================================================
+// Tab navigation
+// =====================================================================
+function switchTab(idx) {
+  activeTaskIdx = idx;
+  render();
+}
+
+// =====================================================================
+// Task CRUD
+// =====================================================================
+function updateTaskField(field, value) {
+  const task = tasks[activeTaskIdx];
+  if (task) task[field] = value;
+  // Update tab label if name changed
+  if (field === 'name') renderTabs();
+}
+
+function addTask() {
+  tasks.push(createTask());
+  activeTaskIdx = tasks.length - 1;
+  render();
+}
+
+function deleteTask() {
+  if (tasks.length <= 1) { alert('タスクは最低1つ必要です。'); return; }
+  tasks.splice(activeTaskIdx, 1);
+  if (activeTaskIdx >= tasks.length) activeTaskIdx = tasks.length - 1;
+  render();
+}
+
+// =====================================================================
+// Check Item CRUD
+// =====================================================================
+function updateItemField(itemId, field, value) {
+  const task = tasks[activeTaskIdx];
+  if (!task) return;
+  const item = task.items.find(i => i.id === itemId);
+  if (item) item[field] = value;
+}
+
+function addCheckItem() {
+  const task = tasks[activeTaskIdx];
+  if (!task) return;
+  task.items.push(createCheckItem());
+  renderActivePanel();
+}
+
+function deleteCheckItem(itemId) {
+  const task = tasks[activeTaskIdx];
+  if (!task) return;
+  if (task.items.length <= 1) { alert('確認項目は最低1つ必要です。'); return; }
+  task.items = task.items.filter(i => i.id !== itemId);
+  renderActivePanel();
+  // Update count
+  const totalItems = tasks.reduce((s, t) => s + t.items.length, 0);
+  document.getElementById('task-count').textContent = `${tasks.length} タスク・${totalItems} 確認項目`;
+}
+
+function toggleBlocking(itemId) {
+  const task = tasks[activeTaskIdx];
+  if (!task) return;
+  const item = task.items.find(i => i.id === itemId);
+  if (item) { item.blocking = !item.blocking; renderActivePanel(); }
+}
+
+// =====================================================================
+// Sample Data
+// =====================================================================
+function loadSample() {
+  nextTaskId = 100; nextItemId = 1000;
+  isSampleLoaded = true;
+
+  tasks = [
+    createTask(
+      '書面の添付確認',
+      '申請に注文書が正しく添付されているかを確認する。控え・仮ではなく正式なものかもチェック。',
+      [createCheckItem('書面種別判定', '正式な注文書が添付されていること。', '未添付の場合NG。\n(控)や(仮)が添付されている場合NG。\n書面種別が「注文書」でない場合NG。', true)]
+    ),
+    createTask(
+      '注文書と社内データの突合',
+      '注文書の内容と社内システム（V-UP）データを突合し、各項目の一致を確認。',
+      [
+        createCheckItem('契約日（注文日）', '日付が突合データと一致していること。', '未記載の場合NG。不一致の場合NG。', false),
+        createCheckItem('受注企業名', '企業名が省略されず記載、突合データと一致。', '未記載・省略・不一致の場合NG。', false),
+        createCheckItem('品目', '品目が突合データと一致していること。', '不一致NG。白物家電は販売不可のためNG。', false),
+        createCheckItem('数量', '数量が突合データと一致していること。', '未記載または不一致NG。', false),
+        createCheckItem('発注金額', '金額が突合データと一致していること。', '不一致NG。基本契約なし＋100万円以上NG。', false),
+        createCheckItem('押印', '取引先の押印があること。', '押印なしNG。', false),
+        createCheckItem('担当者名', '社判押印企業の担当者名がフルネーム。', 'フルネームでなければNG。', false)
+      ]
+    )
+  ];
+
+  // Overview fields with sample styling
+  const fields = {
+    'biz-name': '注文書審査業務',
+    'biz-purpose': '注文書の受領から、内容チェック・データ照合・承認判定までを自動化し、工数を削減する。',
+    'biz-document': '注文書（取引先からFAX/メールで受領）',
+    'sys-name': 'BPaaS 業務管理システム',
+    'sys-url': 'https://external.rsi-bpaas-dev.rinfra.ricoh.com/process'
+  };
+  for (const [id, val] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    el.value = val;
+    el.classList.add('is-sample');
+    el.addEventListener('focus', function handler() {
+      if (this.classList.contains('is-sample')) {
+        this.classList.remove('is-sample');
+        this.value = '';
+      }
+    }, {once: true});
+  }
+  // Return comments
+  const rc = document.getElementById('return-comments');
+  rc.value =
+    '書面が未添付です。添付いただき、再申請して下さい。\n' +
+    '注文書の(控)・(仮)が添付されています。正式な注文書を入手次第、再申請して下さい。\n' +
+    '注文書に『注文日』が未記載です。日付を記載して再申請して下さい。\n' +
+    '注文書の『お客様会社名』が未記載です。記載して再申請して下さい。\n' +
+    '注文書にお客様捺印がありません。押印して再申請して下さい。\n' +
+    '『契約金額』が注文書とデータで不一致です。\n' +
+    '数量が注文書とデータで不一致です。';
+  rc.classList.add('is-sample');
+  rc.addEventListener('focus', function handler() {
+    if (this.classList.contains('is-sample')) {
+      this.classList.remove('is-sample');
+      this.value = '';
+    }
+  }, {once: true});
+
+  render();
+}
+
+// =====================================================================
+// Structurize
+// =====================================================================
+function structurizeRequirements() {
+  const bizName = document.getElementById('biz-name').value.trim();
+  const bizPurpose = document.getElementById('biz-purpose').value.trim();
+  const returnCommentsRaw = document.getElementById('return-comments').value.trim();
+  const sysName = document.getElementById('sys-name').value.trim();
+  const sysUrl = document.getElementById('sys-url').value.trim();
+
+  const checkCriteria = [];
+  tasks.forEach(task => {
+    task.items.forEach(item => {
+      if (!item.name && !item.okRule && !item.ngRule) return; // skip empty
+      const parts = [];
+      if (item.okRule) parts.push('OKの条件: ' + item.okRule.trim());
+      if (item.ngRule) parts.push('NGの条件: ' + item.ngRule.trim());
+      checkCriteria.push({
+        name: item.name || '未設定',
+        rule: parts.join('\n'),
+        blocking: item.blocking,
+        enabled: true,
+        _taskName: task.name
+      });
+    });
+  });
+
+  const returnComments = returnCommentsRaw
+    .split('\n').map(l => l.trim()).filter(l => l.length > 0)
+    .map((text, i) => ({ id: i + 1, text, flowType: guessFlowType(text) }));
+
+  return { name: bizName || '業務名未設定', desc: bizPurpose, checkCriteria, returnComments, apiSystemName: sysName, apiUrl: sysUrl };
+}
+
+function guessFlowType(text) {
+  return ['不一致','データ','数量','金額','商品','明細','会社名','支払'].some(kw => text.includes(kw)) ? 'data_verification' : 'document_check';
+}
+
+// =====================================================================
+// Preview
+// =====================================================================
+function togglePreview() {
+  const panel = document.getElementById('preview-panel');
+  if (panel.classList.contains('visible')) { panel.classList.remove('visible'); return; }
+  renderPreview(structurizeRequirements());
+  panel.classList.add('visible');
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderPreview(data) {
+  const body = document.getElementById('preview-body');
+  let html = `<div class="struct-block"><div class="struct-title">📋 基本設定</div>
+    <div class="struct-field"><span class="struct-key">name:</span><span class="struct-value">${esc(data.name)}</span></div>
+    <div class="struct-field"><span class="struct-key">desc:</span><span class="struct-value">${esc(data.desc||'(なし)')}</span></div>
+    ${data.apiUrl ? `<div class="struct-field"><span class="struct-key">apiUrl:</span><span class="struct-value">${esc(data.apiUrl)}</span></div>` : ''}
+  </div>`;
+  let curTask = '';
+  data.checkCriteria.forEach((c, i) => {
+    if (c._taskName !== curTask) {
+      curTask = c._taskName;
+      html += `<div style="font-size:11px;font-weight:700;color:var(--gray-400);margin:14px 0 6px;padding-left:4px">📁 ${esc(curTask||'(未設定)')}</div>`;
+    }
+    html += `<div class="struct-block"><div class="struct-title">checkCriteria[${i}]: ${esc(c.name)}${c.blocking?'<span class="struct-badge blocking">blocking</span>':''}</div>
+      <div class="struct-field"><span class="struct-key">rule:</span><span class="struct-value">${esc(c.rule)}</span></div></div>`;
+  });
+  if (data.returnComments.length > 0) {
+    html += `<div class="struct-block"><div class="struct-title">💬 returnComments[${data.returnComments.length}]</div>
+      ${data.returnComments.map(c => `<div class="struct-field"><span class="struct-key">[${c.id}] ${c.flowType}:</span><span class="struct-value">${esc(c.text)}</span></div>`).join('')}</div>`;
+  }
+  body.innerHTML = html;
+}
+
+// =====================================================================
+// Generate
+// =====================================================================
+function generateFromRequirements() {
+  const data = structurizeRequirements();
+  const errors = [];
+  if (!data.name || data.name === '業務名未設定') errors.push('業務名を入力してください。');
+  if (data.checkCriteria.length === 0) errors.push('確認項目を1つ以上入力してください。');
+  data.checkCriteria.forEach(c => { if (!c.rule) errors.push(`「${c.name}」: OK/NG条件を入力してください。`); });
+  if (errors.length > 0) { alert('⚠ 入力を確認:\n\n' + errors.join('\n')); return; }
+  renderPreview(data);
+  document.getElementById('preview-panel').classList.add('visible');
+  console.log(JSON.stringify(data, null, 2));
+  alert(`✅ 構造化完了\n\ncheckCriteria: ${data.checkCriteria.length}件\nreturnComments: ${data.returnComments.length}件\n\n※モック: 実装版ではDSL自動生成に接続`);
+}
+
+// =====================================================================
+// Init
+// =====================================================================
+loadSample();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+# =============================================================================
+# テンプレート: 結果登録ツール
+# =============================================================================
+# パターン: Start → ParameterExtractor → LLM → Code → HTTP POST → End (5ノード)
+# 用途:     処理結果からパラメータを抽出し、メタデータを生成して外部APIに登録する
+# 適用例:   審査結果のDB登録、検査結果の外部システム連携、ワークフロー完了通知
+# =============================================================================
+# ★カスタマイズ箇所は「# ★カスタマイズ:」コメントで示しています。
+# サンプル値は書面審査業務のものです。自業務の値に差し替えてください。
+# =============================================================================
+app:
+  description: ''
+  icon: "\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_書面審査結果登録ツール  # ★カスタマイズ: ツール名
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b  # ★カスタマイズ: LLMプロバイダー
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    # Start → ParameterExtractor
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: parameter-extractor
+      id: 1764056626699-source-1768370485830-target
+      selected: false
+      source: '1764056626699'
+      sourceHandle: source
+      target: '1768370485830'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # HTTP POST → End
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: http-request
+        targetType: end
+      id: 1768371463899-source-1764056650131-target
+      selected: false
+      source: '1768371463899'
+      sourceHandle: source
+      target: '1764056650131'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # Code → HTTP POST
+    - data:
+        isInLoop: false
+        sourceType: code
+        targetType: http-request
+      id: 1768372229204-source-1768371463899-target
+      selected: false
+      source: '1768372229204'
+      sourceHandle: source
+      target: '1768371463899'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # ParameterExtractor → LLM
+    - data:
+        isInLoop: false
+        sourceType: parameter-extractor
+        targetType: llm
+      id: 1768370485830-source-1768833222540-target
+      source: '1768370485830'
+      sourceHandle: source
+      target: '1768833222540'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    # LLM → Code
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: code
+      id: 1768833222540-source-1768372229204-target
+      source: '1768833222540'
+      sourceHandle: source
+      target: '1768372229204'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    # -----------------------------------------------------------------------
+    # ノード1: 開始
+    # -----------------------------------------------------------------------
+    - data:
+        selected: false
+        title: 開始
+        type: start
+        variables:
+        - default: ''
+          hint: ''
+          label: prompt
+          max_length: 50000
+          options: []
+          placeholder: ''
+          required: true
+          type: paragraph
+          variable: prompt
+      height: 108
+      id: '1764056626699'
+      position:
+        x: 0
+        y: 14
+      positionAbsolute:
+        x: 0
+        y: 14
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    # -----------------------------------------------------------------------
+    # ノード2: パラメータ抽出
+    # -----------------------------------------------------------------------
+    - data:
+        model:
+          completion_params:
+            temperature: 0.7  # ★カスタマイズ: temperature
+          mode: chat
+          name: gpt-4.1-mini  # ★カスタマイズ: モデル名
+          provider: langgenius/azure_openai/azure_openai  # ★カスタマイズ: プロバイダー
+        # ===================================================================
+        # ★カスタマイズ: 抽出するパラメータを自業務に合わせて定義
+        # 各パラメータの name, description, type, required を設定
+        # ===================================================================
+        parameters:
+        - description: '"契約者（甲）お客様名（書面用）"の値を代入してください。'  # ★カスタマイズ
+          name: company_name  # ★カスタマイズ
+          required: true
+          type: string
+        - description: '"書面審査結果"の値が"承認"であれば"completed"、"差戻し"であれば"returned"となります。'  # ★カスタマイズ
+          name: system_status  # ★カスタマイズ
+          required: true
+          type: string
+        - description: '"書面チェック結果"に書かれている、判断理由を示した文章です。書面審査結果が"承認"の場合は何も代入せず、""としてください。'  # ★カスタマイズ
+          name: decision_reason  # ★カスタマイズ
+          required: false
+          type: string
+        - description: '"契約番号"の値です。'  # ★カスタマイズ
+          name: contract_number  # ★カスタマイズ
+          required: false
+          type: string
+        - description: '"案件番号"の値です。"案件番号"が存在しない場合は12345678を代入してください。'  # ★カスタマイズ
+          name: case_number  # ★カスタマイズ
+          required: false
+          type: string
+        - description: >-  # ★カスタマイズ: メタデータ抽出ロジック全体を書き換え
+            はじめに、パラメータを抽出する対象となるテキストデータのフォーマットを説明します。
+
+            ■差戻しコメントID
+            ・差戻しコメントID
+            ・フロー種別判定フラグ
+            ・NGと判断された理由
+
+            ■チェック項目ID
+            ・チェック項目ID
+            ・フロー種別判定フラグ
+            ・NGと判断された理由
+
+            次に、下記の情報をそれぞれ特定してください。
+
+            ・flow_type("document_check"または"data_verification")
+            ・差戻しコメントID
+            ・上記差戻しコメントIDと対応するチェック項目ID
+            ・NGと判断された理由
+
+            値は下記のフォーマットで出力してください。
+            "■差戻しコメントID"や"■チェック項目ID"が複数ある場合は、Pythonのリストに準じて追記してください。
+
+            [(flow_type,差戻しコメントID,チェック項目ID,AI判断理由),]
+
+            ※複数ある場合の例
+            [(flow_type,差戻しコメントID,チェック項目ID,AI判断理由), (flow_type,差戻しコメントID,チェック項目ID,AI判断理由),
+            (flow_type,差戻しコメントID,チェック項目ID,AI判断理由),]
+          name: metadata_list  # ★カスタマイズ
+          required: true
+          type: array[string]
+        query:
+        - '1764056626699'
+        - prompt
+        reasoning_mode: prompt
+        selected: false
+        title: パラメータ抽出  # ★カスタマイズ: ノードタイトル
+        type: parameter-extractor
+        vision:
+          enabled: false
+      height: 87
+      id: '1768370485830'
+      position:
+        x: 342
+        y: 21
+      positionAbsolute:
+        x: 342
+        y: 21
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード3: LLM (metadata生成)
+    # -----------------------------------------------------------------------
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        model:
+          completion_params:
+            temperature: 0.7  # ★カスタマイズ: temperature
+          mode: chat
+          name: gpt-4.1-mini  # ★カスタマイズ: モデル名
+          provider: langgenius/azure_openai/azure_openai  # ★カスタマイズ: プロバイダー
+        prompt_template:
+        - id: 6f84523b-c8b1-4a5e-a53a-e66d5c89e38c
+          role: system
+          # =================================================================
+          # ★カスタマイズ: メタデータ生成プロンプト全体を自業務に合わせて書き換え
+          # 抽出パラメータから外部API用のJSONペイロードを生成するロジック
+          # =================================================================
+          text: >-
+            {{#1768370485830.metadata_list#}}参照して、下記のJSON文字列を出力してください。
+
+            "flow_type"が"document_check"であれば、下記フォーマットの"document_check"の"metadata"タブに情報を追記します。
+
+            "flow_type"が"data_verification"であれば、下記フォーマットの"data_verification"の"metadata"タブに情報を追記します。
+
+            **下記のフォーマットに書かれていないこと、例えば"[]"などは絶対に出力しないでください。**
+
+            {
+              flow_type: "document_check",
+              process_status: "{{#1768370485830.system_status#}}",
+              metadata: [{
+                check_list_id: {チェック項目ID},
+                comment_id: {差戻しコメントID},
+                decision_reason: "{AI判断理由}"
+              }]
+            },
+            {
+              flow_type: "data_verification",
+              process_status: "{{#1768370485830.system_status#}}",
+              metadata: [{
+                check_list_id: {チェック項目ID},
+                comment_id: {差戻しコメントID},
+                decision_reason: "{AI判断理由}"
+              }]
+            }
+
+            {{#1768370485830.metadata_list#}}を参照した結果、flow_typeに"document_check"がない場合は、"document_check"のJSON文字列を下記のように書き換えてください。
+            {
+              flow_type: "document_check",
+              process_status: "completed",
+              metadata: [],
+            }
+
+            また、{{#1768370485830.metadata_list#}}を参照した結果、flow_typeに"data_verification"がない場合は、"data_verification"のJSON文字列を下記のように書き換えてください。
+            {
+              flow_type: "data_verification",
+              process_status: "completed",
+              metadata: [],
+            }
+        selected: false
+        title: metadata生成  # ★カスタマイズ: ノードタイトル
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '1768833222540'
+      position:
+        x: 683
+        y: 21
+      positionAbsolute:
+        x: 683
+        y: 21
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード4: コード実行 (現在時刻取得) ※汎用パターン - 通常変更不要
+    # -----------------------------------------------------------------------
+    - data:
+        code: "from datetime import datetime\nfrom zoneinfo import ZoneInfo\n\ndef\
+          \ main():\n    now_datetime = str(datetime.now(ZoneInfo(\"Asia/Tokyo\")))\n\
+          \    return {\n        \"now_datetime\": now_datetime,\n    }"
+        code_language: python3
+        outputs:
+          now_datetime:
+            children: null
+            type: string
+        selected: false
+        title: 現在時刻取得
+        type: code
+        variables: []
+      height: 51
+      id: '1768372229204'
+      position:
+        x: 1024
+        y: 42
+      positionAbsolute:
+        x: 1024
+        y: 42
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード5: HTTPリクエスト (外部API POST)
+    # -----------------------------------------------------------------------
+    - data:
+        authorization:
+          config: null
+          type: no-auth  # ★カスタマイズ: 認証設定
+        body:
+          data:
+          - id: key-value-25
+            key: ''
+            type: text
+            # =================================================================
+            # ★カスタマイズ: APIリクエストボディ全体を自業務に合わせて書き換え
+            # 抽出パラメータとmetadata生成結果を組み合わせたJSON
+            # =================================================================
+            value: "\t{\n\t\tcompany_name: \"{{#1768370485830.company_name#}}\",\n\
+              \t\tdocument_type: \"review\",\n\t\tidentifiers: [\n\t\t\t{\n\t\t\t\t\
+              identifier_type: \"case_number\",\n\t\t\t\tidentifier_value: \"{{#1768370485830.case_number#}}\"\
+              \n\t\t\t},\n\t\t\t{\n\t\t\t\tidentifier_type: \"contract_number\",\n\
+              \t\t\t\tidentifier_value: \"{{#1768370485830.contract_number#}}\"\n\t\
+              \t\t}\n\t\t],\n\t\tsearch_condition_id: 1,\n\t\tsystem_status: \"{{#1768370485830.system_status#}}\"\
+              ,\n\t\trequested_at: \"{{#1768372229204.now_datetime#}}\",\n\t\tstart_at:\
+              \ 2025-12-18 13:00:00,\n\t\tend_at: 2025-12-18 13:20:00,\n\t\tdetails:\
+              \ [{{#1768833222540.text#}}]\n\t}"
+          type: json
+        headers: ''
+        method: post
+        params: ''
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        selected: false
+        ssl_verify: true
+        timeout:
+          max_connect_timeout: 0
+          max_read_timeout: 0
+          max_write_timeout: 0
+        title: HTTPリクエスト
+        type: http-request
+        url: https://external.rsi-bpaas-dev.rinfra.ricoh.com/process  # ★カスタマイズ: APIエンドポイント
+        variables: []
+      height: 136
+      id: '1768371463899'
+      position:
+        x: 1365
+        y: 0
+      positionAbsolute:
+        x: 1365
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    # -----------------------------------------------------------------------
+    # ノード6: 終了
+    # -----------------------------------------------------------------------
+    - data:
+        outputs:
+        - value_selector:
+          - '1768371463899'
+          - status_code
+          value_type: number
+          variable: result
+        selected: false
+        title: 終了
+        type: end
+      height: 87
+      id: '1764056650131'
+      position:
+        x: 1706.949172227125
+        y: 21
+      positionAbsolute:
+        x: 1706.949172227125
+        y: 21
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 241
+    viewport:
+      x: 61.72318035628143
+      y: 242.96954504789107
+      zoom: 0.695083501742144
+  rag_pipeline_variables: []

@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dify DSL Builder - BPaaS Agent Template</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;--gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;--gray-900:#111827;--green:#059669;--green-light:#d1fae5;--red:#dc2626;--red-light:#fee2e2;--orange:#d97706;--orange-light:#fef3c7;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:var(--gray-50);color:var(--gray-800);line-height:1.6;min-height:100vh}
+/* Header */
+.header{background:#fff;border-bottom:1px solid var(--gray-200);padding:16px 24px;display:flex;align-items:center;gap:12px}
+.header h1{font-size:18px;font-weight:700;color:var(--gray-900)}
+.header .badge{background:var(--primary-light);color:var(--primary);font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600}
+/* Stepper */
+.stepper{display:flex;justify-content:center;gap:0;padding:24px 24px 0;max-width:600px;margin:0 auto}
+.step-item{display:flex;align-items:center;gap:8px;flex:1}
+.step-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border:2px solid var(--gray-300);color:var(--gray-400);background:#fff;transition:all .3s}
+.step-item.active .step-circle{border-color:var(--primary);color:#fff;background:var(--primary)}
+.step-item.done .step-circle{border-color:var(--green);color:#fff;background:var(--green)}
+.step-label{font-size:13px;color:var(--gray-400);font-weight:500;transition:color .3s;white-space:nowrap}
+.step-item.active .step-label{color:var(--primary);font-weight:700}
+.step-item.done .step-label{color:var(--green)}
+.step-line{flex:1;height:2px;background:var(--gray-300);margin:0 8px;min-width:20px;transition:background .3s}
+.step-line.done{background:var(--green)}
+/* Container */
+.container{max-width:960px;margin:0 auto;padding:24px}
+.panel{display:none}
+.panel.active{display:block}
+/* Cards */
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);box-shadow:var(--shadow);overflow:hidden}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:16px}
+.template-card{cursor:pointer;transition:all .2s;position:relative}
+.template-card:hover{border-color:var(--primary);box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.template-card .card-header{padding:20px 20px 12px;display:flex;align-items:flex-start;gap:12px}
+.template-card .card-icon{font-size:36px;line-height:1}
+.template-card .card-title{font-size:16px;font-weight:700;color:var(--gray-900)}
+.template-card .card-desc{font-size:13px;color:var(--gray-500);margin-top:4px}
+.template-card .card-body{padding:0 20px 16px}
+.effect-tag{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;margin:2px 2px 2px 0;font-weight:500}
+.effect-tag.green{background:var(--green-light);color:var(--green)}
+.effect-tag.orange{background:var(--orange-light);color:var(--orange)}
+.template-card .card-footer{border-top:1px solid var(--gray-100);padding:12px 20px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--gray-400)}
+.tool-count{font-weight:600;color:var(--primary)}
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:20px;overflow-x:auto}
+.tab-btn{padding:10px 16px;font-size:13px;font-weight:600;color:var(--gray-500);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--gray-700)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:4px}
+.form-hint{font-size:11px;color:var(--gray-400);margin-bottom:4px}
+input[type="text"],input[type="url"],input[type="number"],textarea,select{width:100%;padding:8px 12px;border:1px solid var(--gray-300);border-radius:var(--radius);font-size:14px;font-family:inherit;transition:border-color .2s;background:#fff}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea{resize:vertical;min-height:60px}
+/* Dynamic list */
+.dyn-list{border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden}
+.dyn-item{padding:12px 16px;border-bottom:1px solid var(--gray-100);display:flex;gap:12px;align-items:flex-start;background:#fff;transition:background .15s}
+.dyn-item:last-child{border-bottom:none}
+.dyn-item:hover{background:var(--gray-50)}
+.dyn-item .item-id{min-width:28px;height:28px;border-radius:50%;background:var(--gray-100);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--gray-500);flex-shrink:0;margin-top:2px}
+.dyn-item .item-content{flex:1;display:flex;flex-direction:column;gap:6px}
+.dyn-item .item-content input,.dyn-item .item-content textarea,.dyn-item .item-content select{font-size:13px;padding:6px 10px}
+.dyn-item .item-row{display:flex;gap:8px;align-items:center}
+.dyn-item .item-row input,.dyn-item .item-row select{flex:1}
+.dyn-item .item-actions{flex-shrink:0}
+.btn-icon{background:none;border:none;cursor:pointer;padding:4px;border-radius:4px;color:var(--gray-400);transition:all .15s;font-size:16px}
+.btn-icon:hover{background:var(--red-light);color:var(--red)}
+.dyn-add{padding:10px 16px;text-align:center}
+.dyn-add button{background:none;border:1px dashed var(--gray-300);padding:6px 16px;border-radius:var(--radius);color:var(--primary);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.dyn-add button:hover{background:var(--primary-light);border-color:var(--primary)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-secondary{background:#fff;color:var(--gray-700);border:1px solid var(--gray-300)}
+.btn-secondary:hover{background:var(--gray-50)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#047857}
+.btn-sm{padding:6px 12px;font-size:12px}
+.actions{display:flex;justify-content:space-between;margin-top:24px;padding-top:16px;border-top:1px solid var(--gray-200)}
+/* Preview */
+.preview-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap}
+.preview-tab{padding:6px 12px;font-size:12px;font-weight:600;border:1px solid var(--gray-300);border-radius:var(--radius);background:#fff;color:var(--gray-600);cursor:pointer;transition:all .15s}
+.preview-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.preview-area{background:var(--gray-900);color:#e5e7eb;padding:16px;border-radius:var(--radius);font-family:"Consolas","Monaco","Courier New",monospace;font-size:12px;line-height:1.5;overflow-x:auto;max-height:500px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+/* Guide */
+.guide{margin-top:24px}
+.guide-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.guide-step:last-child{border-bottom:none}
+.guide-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.guide-text{font-size:13px;color:var(--gray-600)}
+.guide-text strong{color:var(--gray-800)}
+/* Section header */
+.section-header{margin-bottom:20px}
+.section-header h2{font-size:20px;font-weight:700;color:var(--gray-900)}
+.section-header p{font-size:14px;color:var(--gray-500);margin-top:4px}
+/* Checkbox */
+.checkbox-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-600)}
+.checkbox-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--primary)}
+/* Responsive */
+@media(max-width:640px){.container{padding:12px}.stepper{padding:12px 12px 0}.step-label{font-size:11px}}
+/* Category cards */
+.cat-card{cursor:pointer;transition:all .2s;position:relative}
+.cat-card:hover{border-color:var(--primary);box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.cat-card .cat-header{padding:20px;display:flex;align-items:center;gap:14px}
+.cat-card .cat-icon{font-size:32px;line-height:1;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--gray-50);border-radius:var(--radius)}
+.cat-card .cat-title{font-size:16px;font-weight:700;color:var(--gray-900)}
+.cat-card .cat-desc{font-size:13px;color:var(--gray-500);margin-top:2px}
+.cat-card .cat-meta{padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.meta-chip{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;background:var(--gray-100);color:var(--gray-500)}
+.cat-card .cat-footer{border-top:1px solid var(--gray-100);padding:10px 20px;font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px}
+/* Breadcrumb */
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray-400);margin-bottom:16px}
+.breadcrumb a{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer}
+.breadcrumb a:hover{text-decoration:underline}
+/* Mock badge */
+.mock-badge{position:absolute;top:12px;right:12px;background:var(--gray-200);color:var(--gray-500);font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:.5px}
+.template-card.is-mock,.cat-card.is-mock{opacity:.7}
+.template-card.is-mock:hover,.cat-card.is-mock:hover{transform:none;box-shadow:var(--shadow);border-color:var(--gray-200);cursor:default}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div style="font-size:24px">&#x1F528;</div>
+  <h1>Dify DSL Builder</h1>
+  <span class="badge">BPaaS Agent Template</span>
+</div>
+
+<!-- Stepper -->
+<div class="stepper">
+  <div class="step-item active" id="step-ind-1">
+    <div class="step-circle">1</div>
+    <div class="step-label">テンプレート選択</div>
+  </div>
+  <div class="step-line" id="step-line-1"></div>
+  <div class="step-item" id="step-ind-2">
+    <div class="step-circle">2</div>
+    <div class="step-label">ビジネスロジック設定</div>
+  </div>
+  <div class="step-line" id="step-line-2"></div>
+  <div class="step-item" id="step-ind-3">
+    <div class="step-circle">3</div>
+    <div class="step-label">生成 & ダウンロード</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ========== Step 1: テンプレート選択 ========== -->
+<div class="panel active" id="panel-1">
+  <!-- 1-a: カテゴリ一覧 -->
+  <div id="view-categories">
+    <div class="section-header">
+      <h2>業務カテゴリを選択</h2>
+      <p>自動化したい業務カテゴリを選択してください。カテゴリ内のテンプレートを選択し、次のステップで自部署の業務ルールを設定します。</p>
+    </div>
+    <div class="card-grid" id="category-grid"></div>
+  </div>
+  <!-- 1-b: テンプレート一覧 -->
+  <div id="view-templates" style="display:none">
+    <div class="breadcrumb">
+      <a onclick="showCategories()">業務カテゴリ</a>
+      <span>&rsaquo;</span>
+      <span id="breadcrumb-cat-name"></span>
+    </div>
+    <div class="section-header">
+      <h2 id="tmpl-list-title"></h2>
+      <p id="tmpl-list-desc"></p>
+    </div>
+    <div class="card-grid" id="template-grid"></div>
+  </div>
+</div>
+
+<!-- ========== Step 2: ビジネスロジック設定 ========== -->
+<div class="panel" id="panel-2">
+  <div class="section-header">
+    <h2>ビジネスロジック設定</h2>
+    <p>テンプレートのデフォルト値をベースに、自部署の業務ルールを設定してください。</p>
+  </div>
+  <div class="card" style="padding:0">
+    <div class="tabs" id="config-tabs">
+      <button class="tab-btn active" data-tab="tab-basic">基本設定</button>
+      <button class="tab-btn" data-tab="tab-checks">チェック観点</button>
+      <button class="tab-btn" data-tab="tab-comments">差戻しコメント</button>
+      <button class="tab-btn" data-tab="tab-items">チェック項目</button>
+      <button class="tab-btn" data-tab="tab-api">システム連携</button>
+    </div>
+    <div style="padding:20px">
+
+      <!-- Tab: 基本設定 -->
+      <div class="tab-panel active" id="tab-basic">
+        <div class="form-group">
+          <label class="form-label">業務名</label>
+          <input type="text" id="cfg-name" value="書面審査業務">
+        </div>
+        <div class="form-group">
+          <label class="form-label">業務説明</label>
+          <textarea id="cfg-desc" rows="3">企業間の契約に際しての書面審査を自動化する業務</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">LLMモデル名</label>
+            <input type="text" id="cfg-model" value="gpt-4.1-mini">
+          </div>
+          <div class="form-group">
+            <label class="form-label">プロバイダー</label>
+            <input type="text" id="cfg-provider" value="langgenius/azure_openai/azure_openai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Temperature</label>
+            <input type="number" id="cfg-temp" value="0.7" step="0.1" min="0" max="2">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: チェック観点 -->
+      <div class="tab-panel" id="tab-checks">
+        <div class="form-hint" style="margin-bottom:12px">チェックツールが注文書画像をチェックする際の観点を設定します。「ブロッキング」にチェックを入れると、その項目がNGの場合に後続チェックがスキップされます。</div>
+        <div class="dyn-list" id="check-criteria-list"></div>
+        <div class="dyn-add"><button onclick="addCheckCriteria()">+ チェック観点を追加</button></div>
+      </div>
+
+      <!-- Tab: 差戻しコメント -->
+      <div class="tab-panel" id="tab-comments">
+        <div class="form-hint" style="margin-bottom:12px">差戻し時に申請者へ通知するコメント文を設定します。「分類」は、そのコメントが書面そのものの不備か、データとの不一致かを選択します。</div>
+        <div class="dyn-list" id="return-comments-list"></div>
+        <div class="dyn-add"><button onclick="addReturnComment()">+ 差戻しコメントを追加</button></div>
+      </div>
+
+      <!-- Tab: チェック項目 -->
+      <div class="tab-panel" id="tab-items">
+        <div class="form-hint" style="margin-bottom:12px">審査結果として記録されるチェック項目を設定します。「分類」は、書面不備に関する項目か、データ突合に関する項目かを選択します。</div>
+        <div class="dyn-list" id="check-items-list"></div>
+        <div class="dyn-add"><button onclick="addCheckItem()">+ チェック項目を追加</button></div>
+      </div>
+
+      <!-- Tab: システム連携 -->
+      <div class="tab-panel" id="tab-api">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:4px;color:var(--gray-700)">結果を登録するシステム</h3>
+        <div class="form-hint" style="margin-bottom:12px">審査結果を登録する先のシステム情報を設定します。</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">登録先システム名</label>
+            <input type="text" id="cfg-api-system-name" value="BPaaS 業務管理システム">
+          </div>
+          <div class="form-group">
+            <label class="form-label">通信方式</label>
+            <select id="cfg-api-method"><option value="post" selected>POST（登録・更新）</option><option value="get">GET（参照のみ）</option><option value="put">PUT（上書き更新）</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">接続先URL</label>
+          <div class="form-hint">システム管理者から指定されたURLを入力してください。</div>
+          <input type="url" id="cfg-api-url" value="https://external.rsi-bpaas-dev.rinfra.ricoh.com/process">
+        </div>
+
+        <h3 style="font-size:14px;font-weight:700;margin:24px 0 4px;color:var(--gray-700)">登録するデータ項目</h3>
+        <div class="form-hint" style="margin-bottom:12px">審査結果と一緒にシステムへ送信するデータ項目です。項目名・説明を設定すると、AIが審査結果から自動的に値を抽出します。</div>
+        <div class="dyn-list" id="params-list"></div>
+        <div class="dyn-add"><button onclick="addParam()">+ データ項目を追加</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="goStep(1)">&larr; 戻る</button>
+    <button class="btn btn-primary" onclick="goStep(3)">DSLを生成 &rarr;</button>
+  </div>
+</div>
+
+<!-- ========== Step 3: 生成 & ダウンロード ========== -->
+<div class="panel" id="panel-3">
+  <div class="section-header">
+    <h2>DSLファイル生成完了</h2>
+    <p>設定内容に基づいてDify DSLファイルを生成しました。個別にダウンロードするか、一括でダウンロードしてください。</p>
+  </div>
+
+  <div class="card" style="padding:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="font-size:15px;font-weight:700;color:var(--gray-800)">DSLプレビュー</h3>
+      <button class="btn btn-green btn-sm" onclick="downloadAll()">&#x1F4E6; 一括ダウンロード (4ファイル)</button>
+    </div>
+    <div class="preview-tabs" id="preview-tabs"></div>
+    <div class="preview-area" id="preview-area">ファイルを選択してください</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap" id="download-btns"></div>
+  </div>
+
+  <div class="card guide" style="padding:20px;margin-top:16px">
+    <h3 style="font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:12px">Difyへのインポート手順</h3>
+    <div class="guide-step"><div class="guide-num">1</div><div class="guide-text"><strong>ツールを先にインポート</strong>: チェックツール → 判定ツール → 結果登録ツール の順にDifyの「DSLをインポート」で読み込みます。</div></div>
+    <div class="guide-step"><div class="guide-num">2</div><div class="guide-text"><strong>ツールとして公開</strong>: インポートした各ワークフローを「ツールとして公開」し、表示されるUUID (provider_name) をメモします。</div></div>
+    <div class="guide-step"><div class="guide-num">3</div><div class="guide-text"><strong>オーケストレータのUUID更新</strong>: ダウンロードしたオーケストレータYMLの <code>provider_name</code> を、Step 2でメモしたUUIDに書き換えます。</div></div>
+    <div class="guide-step"><div class="guide-num">4</div><div class="guide-text"><strong>オーケストレータをインポート</strong>: 更新したオーケストレータYMLをDifyにインポートして完了です。</div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="goStep(2)">&larr; 設定に戻る</button>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// =====================================================================
+// テンプレートデータ (JSON 埋め込み)
+// =====================================================================
+// =====================================================================
+// カテゴリ定義
+// =====================================================================
+const CATEGORIES = [
+  {
+    id: "document_review",
+    name: "書面審査",
+    icon: "\uD83D\uDCCB",
+    description: "注文書・契約書・見積書など、各種書面の審査業務を自動化します。",
+    templateCount: 3,
+    tags: ["チェック自動化", "承認・差戻し", "結果登録"]
+  },
+  {
+    id: "invoice_processing",
+    name: "請求書業務",
+    icon: "\uD83D\uDCB0",
+    description: "請求書の受領・照合・支払処理に関する業務を自動化します。",
+    templateCount: 2,
+    tags: ["請求照合", "支払処理", "消込"],
+    mock: true
+  },
+  {
+    id: "data_management",
+    name: "データ管理",
+    icon: "\uD83D\uDDC4\uFE0F",
+    description: "マスタデータの登録・更新・整合性チェックなどの管理業務を自動化します。",
+    templateCount: 2,
+    tags: ["マスタ管理", "データ連携", "整合性チェック"],
+    mock: true
+  }
+];
+
+// =====================================================================
+// テンプレートデータ (カテゴリごと)
+// =====================================================================
+const TEMPLATES_BY_CAT = {
+  "document_review": [
+    {
+      id: "order_review",
+      name: "注文書審査",
+      icon: "\uD83D\uDCE6",
+      description: "注文書画像を読み取り、社内データと突合して承認・差戻しを判定します。",
+      effects: [
+        {text: "チェック工数を約30%削減", type: "green"},
+        {text: "チェック業務を簡単化（誰でもできる）", type: "green"},
+        {text: "見逃しリスクの低減", type: "orange"}
+      ],
+      toolCount: 4,
+      capabilities: [
+        "注文書画像の読み取り・内容チェック",
+        "突合データとの自動照合（金額・数量・企業名 等）",
+        "承認 or 差戻しの自動判定",
+        "審査結果のシステム登録"
+      ],
+      defaultLogic: {
+      name: "書面審査業務",
+      desc: "企業間の契約に際しての書面審査を自動化する業務",
+      model: "gpt-4.1-mini",
+      provider: "langgenius/azure_openai/azure_openai",
+      temperature: 0.7,
+      checkCriteria: [
+        {name:"書面種別判定",rule:'"■書面種別判定結果"に記載されている書面種別に"注文書"が含まれていない場合、"添付書類相違"でNG。\n"■書面種別判定結果"に記載されている結果が"書面未添付"の場合、"書面未添付"でNG。',blocking:true},
+        {name:"契約日（注文日）",rule:"発注書画像の日付と一致しているか。発注書画像に注文日が未記載の場合はNG。",blocking:false},
+        {name:"受注企業名",rule:"発注書画像について、企業名が省略されず記載されており、突合用データと一致しているか",blocking:false},
+        {name:"品目",rule:"発注書画像について、品目が明記されており、突合用データと一致しているか。また、白物家電の場合は販売不可なので、品目が白物家電にあたらないこと。",blocking:false},
+        {name:"数量",rule:"発注書画像について、数量が明記されており、突合用データと一致しているか",blocking:false},
+        {name:"発注金額",rule:"発注書画像について、発注金額が明記されており、突合用データと一致しているか。基本契約なしかつ受注額100万円以上の場合はNG。金額が一致していない場合もNG。",blocking:false},
+        {name:"押印",rule:"取引先の押印がされているか。されていればOK、されていなければNG",blocking:false},
+        {name:"担当者名",rule:"社判を押印した企業の担当者名がフルネームで記載されていること。フルネームでなければNG。社判を押印していない企業の担当者名についてはチェック不要。",blocking:false}
+      ],
+      returnComments: [
+        {id:1,text:"書面が未添付です。添付いただき、再申請して下さい。",flowType:"document_check"},
+        {id:2,text:'注文書の(控)・(仮)が添付されていますので、「手配可の差戻し」とします。正式な注文書を入手次第、再申請して下さい。',flowType:"document_check"},
+        {id:3,text:"広域・ＢＰ業務Ｇ（広域顧客営業協力制度担当）の正式な納入依頼書が未添付です。添付いただき、再申請して下さい。",flowType:"document_check"},
+        {id:4,text:'「手配可の差戻し」としますが、○○を入手次第、再申請して下さい。',flowType:"document_check"},
+        {id:5,text:"【地紋印刷画像】",flowType:"document_check"},
+        {id:6,text:"起案書DBリンクがされておりません。Notesの起案書DBリンクを審査データへ添付して、審査依頼をして下さい。",flowType:"document_check"},
+        {id:7,text:"注文書に『注文日』が未記載です。再申請頂く際は記載頂いた日付とＶ－ＵＰデータ契約締結日（注文日）が一致している事を確認して下さい。",flowType:"data_verification"},
+        {id:8,text:"注文書の『お客様会社名』が未記載です。記載していただき、再申請して下さい。",flowType:"data_verification"},
+        {id:9,text:"注文書の『お客様氏名の欄』が未記載です。決裁権限者・ご担当者の氏名を『フルネーム』で記載していただき、再申請して下さい。",flowType:"data_verification"},
+        {id:10,text:"注文書にお客様捺印(代表者印/個人印)がありません。押印していただき、再申請して下さい。※シャチハタ印は不可となります。",flowType:"data_verification"},
+        {id:11,text:"分割審査は不可となっております。V-UPデータは注文書通り作成下さい。発注を分けられるようであれば、契約審査完了後に分けて下さい。",flowType:"data_verification"},
+        {id:12,text:"『契約金額』が『注文書』と『V-UPデータ/契約金額』で不一致です。",flowType:"document_check"},
+        {id:13,text:"『単価金額』が『注文書』と『V-UPデータ/金額』で不一致です。",flowType:"document_check"},
+        {id:14,text:"注文書とV-UPデータの『お客様名』が不一致です。（データの「請求先名」は『○○○』です）",flowType:"data_verification"},
+        {id:15,text:"書面とV-UPデータの商品明細が不一致です。",flowType:"data_verification"},
+        {id:16,text:"商品の一致が確認出来ません。同一商品で間違い無いようであればV-UPコメント欄に「同一商品です」と入力いただき再度審査をご依頼下さい。",flowType:"data_verification"},
+        {id:17,text:'代替・終息コメントにより、「手配可の差戻し」としますが、売上までに契約書面を取り直し、もしくは訂正いただき、再申請して下さい。',flowType:"data_verification"},
+        {id:18,text:"数量が、『注文書』と『V-UPデータ』で不一致です。",flowType:"data_verification"},
+        {id:19,text:"『支払条件（期日/方法）』が、『注文書』と『V-UP回収条件/支払条件（期日/方法）』で不一致です。",flowType:"data_verification"},
+        {id:20,text:"V-UP回収条件が未入力です。入力いただき、再申請して下さい。",flowType:"data_verification"},
+        {id:21,text:"基本契約「無」ユーザーです。売買契約書を取得し、『売買契約書』表紙で再申請して下さい。",flowType:"document_check"}
+      ],
+      checkItems: [
+        {id:1,name:"書面未着：添付書面不備",flowType:"document_check"},
+        {id:2,name:"書面未着：表紙不備",flowType:"document_check"},
+        {id:3,name:"書面：注文日-無/不備",flowType:"document_check"},
+        {id:4,name:"書面：甲)会社名（EU）-不備",flowType:"document_check"},
+        {id:5,name:"書面：甲)役職者名or担当者名-無",flowType:"document_check"},
+        {id:6,name:"書面：お客様契約印-不備",flowType:"document_check"},
+        {id:7,name:"ﾃﾞｰﾀ不一致：契約金額(税抜)",flowType:"data_verification"},
+        {id:8,name:"ﾃﾞｰﾀ不一致：甲)会社名(EU)",flowType:"data_verification"},
+        {id:9,name:"ﾃﾞｰﾀ不一致：(明細)商品名",flowType:"data_verification"},
+        {id:10,name:"ﾃﾞｰﾀ不一致：数量",flowType:"data_verification"},
+        {id:11,name:"ﾃﾞｰﾀ不一致：支払条件",flowType:"data_verification"},
+        {id:12,name:"100万円以上：注文書受注不可",flowType:"document_check"}
+      ],
+      apiSystemName: "BPaaS 業務管理システム",
+      apiUrl: "https://external.rsi-bpaas-dev.rinfra.ricoh.com/process",
+      apiMethod: "post",
+      extractionParams: [
+        {name:"company_name",desc:'"契約者（甲）お客様名（書面用）"の値を代入してください。',required:true},
+        {name:"system_status",desc:'"書面審査結果"の値が"承認"であれば"completed"、"差戻し"であれば"returned"となります。',required:true},
+        {name:"decision_reason",desc:'"書面チェック結果"に書かれている、判断理由を示した文章です。書面審査結果が"承認"の場合は何も代入せず、""としてください。',required:false},
+        {name:"contract_number",desc:'"契約番号"の値です。',required:false},
+        {name:"case_number",desc:'"案件番号"の値です。"案件番号"が存在しない場合は12345678を代入してください。',required:false}
+      ]
+    }
+  },
+  {
+    id: "contract_review",
+    name: "契約書審査",
+    icon: "\uD83D\uDCDD",
+    description: "契約書の条文・署名・押印を確認し、社内規定との整合性をチェックします。",
+    effects: [
+      {text: "チェック工数を約30%削減", type: "green"},
+      {text: "条文見落とし防止", type: "orange"}
+    ],
+    toolCount: 4,
+    capabilities: [
+      "契約書画像の読み取り・条文チェック",
+      "社内規定との自動照合",
+      "承認 or 差戻しの自動判定",
+      "審査結果のシステム登録"
+    ],
+    mock: true
+  },
+  {
+    id: "estimate_review",
+    name: "見積書審査",
+    icon: "\uD83D\uDCCA",
+    description: "見積書の金額・品目・条件を確認し、予算との整合性をチェックします。",
+    effects: [
+      {text: "金額照合の自動化", type: "green"},
+      {text: "予算超過の早期発見", type: "orange"}
+    ],
+    toolCount: 4,
+    capabilities: [
+      "見積書の読み取り・金額チェック",
+      "予算データとの自動照合",
+      "承認 or 差戻しの自動判定",
+      "審査結果のシステム登録"
+    ],
+    mock: true
+  }
+  ],
+  "invoice_processing": [
+  {
+    id: "invoice_matching",
+    name: "請求書照合",
+    icon: "\uD83D\uDD0D",
+    description: "受領した請求書を注文データと自動照合し、差異を検出します。",
+    effects: [
+      {text: "照合作業を約40%削減", type: "green"},
+      {text: "支払遅延の防止", type: "orange"}
+    ],
+    toolCount: 3,
+    capabilities: [
+      "請求書画像の読み取り・金額抽出",
+      "注文データ・納品データとの自動照合",
+      "差異レポートの自動生成"
+    ],
+    mock: true
+  },
+  {
+    id: "payment_processing",
+    name: "支払処理",
+    icon: "\uD83D\uDCB3",
+    description: "照合済み請求書の支払データを生成し、承認フローに回付します。",
+    effects: [
+      {text: "支払処理の迅速化", type: "green"},
+      {text: "二重支払の防止", type: "orange"}
+    ],
+    toolCount: 3,
+    capabilities: [
+      "支払データの自動生成",
+      "承認フローへの自動回付",
+      "処理結果のシステム登録"
+    ],
+    mock: true
+  }
+  ],
+  "data_management": [
+  {
+    id: "master_update",
+    name: "マスタ更新",
+    icon: "\uD83D\uDD04",
+    description: "取引先・商品等のマスタデータ変更申請を検証し、自動更新します。",
+    effects: [
+      {text: "更新作業の工数削減", type: "green"},
+      {text: "入力ミスの防止", type: "orange"}
+    ],
+    toolCount: 3,
+    capabilities: [
+      "変更申請内容のバリデーション",
+      "既存データとの重複・矛盾チェック",
+      "マスタへの自動反映・履歴記録"
+    ],
+    mock: true
+  },
+  {
+    id: "data_reconciliation",
+    name: "データ整合性チェック",
+    icon: "\u2705",
+    description: "複数システム間のデータ整合性を定期的にチェックし、差異を報告します。",
+    effects: [
+      {text: "不整合の早期発見", type: "green"},
+      {text: "手動突合の廃止", type: "orange"}
+    ],
+    toolCount: 3,
+    capabilities: [
+      "複数データソースの自動取得",
+      "項目単位での突合・差異検出",
+      "差異レポートの自動生成・通知"
+    ],
+    mock: true
+  }
+  ]
+};
+
+// =====================================================================
+// State
+// =====================================================================
+let currentStep = 1;
+let selectedCategory = null;
+let selectedTemplate = null;
+let config = {};
+let generatedDSLs = {};
+
+// =====================================================================
+// Step Navigation
+// =====================================================================
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  for (let i = 1; i <= 3; i++) {
+    const ind = document.getElementById('step-ind-' + i);
+    ind.classList.remove('active', 'done');
+    if (i < n) ind.classList.add('done');
+    else if (i === n) ind.classList.add('active');
+  }
+  for (let i = 1; i <= 2; i++) {
+    const line = document.getElementById('step-line-' + i);
+    line.classList.toggle('done', i < n);
+  }
+  if (n === 1) showCategories();
+  if (n === 3) generateDSLs();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// =====================================================================
+// Step 1: Category & Template Selection
+// =====================================================================
+function renderCategories() {
+  const grid = document.getElementById('category-grid');
+  grid.innerHTML = CATEGORIES.map(cat => `
+    <div class="card cat-card${cat.mock ? ' is-mock' : ''}" onclick="${cat.mock ? 'showMockAlert()' : `showTemplates('${cat.id}')`}">
+      ${cat.mock ? '<div class="mock-badge">COMING SOON</div>' : ''}
+      <div class="cat-header">
+        <div class="cat-icon">${cat.icon}</div>
+        <div>
+          <div class="cat-title">${cat.name}</div>
+          <div class="cat-desc">${cat.description}</div>
+        </div>
+      </div>
+      <div class="cat-meta">
+        ${cat.tags.map(t => `<span class="meta-chip">${t}</span>`).join('')}
+      </div>
+      <div class="cat-footer">
+        <span>${cat.templateCount} テンプレート</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showTemplates(catId) {
+  selectedCategory = CATEGORIES.find(c => c.id === catId);
+  const templates = TEMPLATES_BY_CAT[catId] || [];
+  document.getElementById('view-categories').style.display = 'none';
+  document.getElementById('view-templates').style.display = 'block';
+  document.getElementById('breadcrumb-cat-name').textContent = selectedCategory.name;
+  document.getElementById('tmpl-list-title').textContent = selectedCategory.name + ' テンプレート';
+  document.getElementById('tmpl-list-desc').textContent = '導入する業務テンプレートを選択してください。次のステップで自部署の業務ルールを設定します。';
+  const grid = document.getElementById('template-grid');
+  grid.innerHTML = templates.map(t => `
+    <div class="card template-card${t.mock ? ' is-mock' : ''}" onclick="${t.mock ? 'showMockAlert()' : `selectTemplate('${catId}','${t.id}')`}">
+      ${t.mock ? '<div class="mock-badge">準備中</div>' : ''}
+      <div class="card-header">
+        <div class="card-icon">${t.icon}</div>
+        <div>
+          <div class="card-title">${t.name}</div>
+          <div class="card-desc">${t.description}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--gray-500);font-weight:600;margin-bottom:4px">効果</div>
+        <div style="margin-bottom:12px">${t.effects.map(e => `<span class="effect-tag ${e.type}">${e.text}</span>`).join('')}</div>
+        <div style="font-size:12px;color:var(--gray-500);font-weight:600;margin-bottom:6px">自動化できるタスク</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          ${t.capabilities.map((c,i) => `<div style="font-size:12px;color:var(--gray-600);display:flex;align-items:baseline;gap:6px"><span style="color:var(--primary);font-weight:700">${i+1}.</span>${c}</div>`).join('')}
+        </div>
+      </div>
+      <div class="card-footer">
+        <span><span class="tool-count">${t.toolCount}</span> つのワークフローで構成</span>
+        <span>Dify v0.5.0 DSL</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCategories() {
+  document.getElementById('view-categories').style.display = 'block';
+  document.getElementById('view-templates').style.display = 'none';
+  selectedCategory = null;
+}
+
+function showMockAlert() {
+  alert('このテンプレートは現在準備中です。今後のアップデートでご利用いただけます。');
+}
+
+function selectTemplate(catId, tmplId) {
+  const templates = TEMPLATES_BY_CAT[catId] || [];
+  selectedTemplate = templates.find(t => t.id === tmplId);
+  if (!selectedTemplate || selectedTemplate.mock) return;
+  config = JSON.parse(JSON.stringify(selectedTemplate.defaultLogic));
+  loadConfigToUI();
+  goStep(2);
+}
+
+// =====================================================================
+// Step 2: Config UI
+// =====================================================================
+// Tab switching
+document.getElementById('config-tabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('tab-btn')) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(e.target.dataset.tab).classList.add('active');
+});
+
+function loadConfigToUI() {
+  document.getElementById('cfg-name').value = config.name;
+  document.getElementById('cfg-desc').value = config.desc;
+  document.getElementById('cfg-model').value = config.model;
+  document.getElementById('cfg-provider').value = config.provider;
+  document.getElementById('cfg-temp').value = config.temperature;
+  document.getElementById('cfg-api-system-name').value = config.apiSystemName || '';
+  document.getElementById('cfg-api-url').value = config.apiUrl;
+  document.getElementById('cfg-api-method').value = config.apiMethod;
+  renderCheckCriteria();
+  renderReturnComments();
+  renderCheckItems();
+  renderParams();
+}
+
+function readConfigFromUI() {
+  config.name = document.getElementById('cfg-name').value;
+  config.desc = document.getElementById('cfg-desc').value;
+  config.model = document.getElementById('cfg-model').value;
+  config.provider = document.getElementById('cfg-provider').value;
+  config.temperature = parseFloat(document.getElementById('cfg-temp').value);
+  config.apiSystemName = document.getElementById('cfg-api-system-name').value;
+  config.apiUrl = document.getElementById('cfg-api-url').value;
+  config.apiMethod = document.getElementById('cfg-api-method').value;
+  // Dynamic lists are read inline
+  readCheckCriteria();
+  readReturnComments();
+  readCheckItems();
+  readParams();
+}
+
+// --- Check Criteria ---
+function renderCheckCriteria() {
+  const list = document.getElementById('check-criteria-list');
+  list.innerHTML = config.checkCriteria.map((c, i) => `
+    <div class="dyn-item" data-idx="${i}">
+      <div class="item-id">${i + 1}</div>
+      <div class="item-content">
+        <div class="item-row">
+          <input type="text" class="cc-name" value="${esc(c.name)}" placeholder="チェック観点名">
+          <label class="checkbox-row"><input type="checkbox" class="cc-block" ${c.blocking ? 'checked' : ''}> ブロッキング</label>
+        </div>
+        <textarea class="cc-rule" rows="2" placeholder="チェックルール">${esc(c.rule)}</textarea>
+      </div>
+      <div class="item-actions"><button class="btn-icon" onclick="removeCheckCriteria(${i})" title="削除">\u2716</button></div>
+    </div>
+  `).join('');
+}
+function readCheckCriteria() {
+  config.checkCriteria = [...document.querySelectorAll('#check-criteria-list .dyn-item')].map(el => ({
+    name: el.querySelector('.cc-name').value,
+    rule: el.querySelector('.cc-rule').value,
+    blocking: el.querySelector('.cc-block').checked
+  }));
+}
+function addCheckCriteria() { readCheckCriteria(); config.checkCriteria.push({name:'',rule:'',blocking:false}); renderCheckCriteria(); }
+function removeCheckCriteria(i) { readCheckCriteria(); config.checkCriteria.splice(i,1); renderCheckCriteria(); }
+
+// --- Return Comments ---
+function renderReturnComments() {
+  const list = document.getElementById('return-comments-list');
+  list.innerHTML = config.returnComments.map((c, i) => `
+    <div class="dyn-item" data-idx="${i}">
+      <div class="item-id">${c.id}</div>
+      <div class="item-content">
+        <textarea class="rc-text" rows="2" placeholder="差戻しコメント">${esc(c.text)}</textarea>
+        <div class="item-row">
+          <span style="font-size:12px;color:var(--gray-500);white-space:nowrap">分類:</span>
+          <select class="rc-flow"><option value="document_check" ${c.flowType==='document_check'?'selected':''}>書面不備</option><option value="data_verification" ${c.flowType==='data_verification'?'selected':''}>データ不一致</option></select>
+        </div>
+      </div>
+      <div class="item-actions"><button class="btn-icon" onclick="removeReturnComment(${i})" title="削除">\u2716</button></div>
+    </div>
+  `).join('');
+}
+function readReturnComments() {
+  config.returnComments = [...document.querySelectorAll('#return-comments-list .dyn-item')].map((el, i) => ({
+    id: i + 1,
+    text: el.querySelector('.rc-text').value,
+    flowType: el.querySelector('.rc-flow').value
+  }));
+}
+function addReturnComment() { readReturnComments(); const nid=config.returnComments.length+1; config.returnComments.push({id:nid,text:'',flowType:'document_check'}); renderReturnComments(); }
+function removeReturnComment(i) { readReturnComments(); config.returnComments.splice(i,1); config.returnComments.forEach((c,j)=>c.id=j+1); renderReturnComments(); }
+
+// --- Check Items ---
+function renderCheckItems() {
+  const list = document.getElementById('check-items-list');
+  list.innerHTML = config.checkItems.map((c, i) => `
+    <div class="dyn-item" data-idx="${i}">
+      <div class="item-id">${c.id}</div>
+      <div class="item-content">
+        <div class="item-row">
+          <input type="text" class="ci-name" value="${esc(c.name)}" placeholder="チェック項目名">
+          <span style="font-size:12px;color:var(--gray-500);white-space:nowrap">分類:</span>
+          <select class="ci-flow"><option value="document_check" ${c.flowType==='document_check'?'selected':''}>書面不備</option><option value="data_verification" ${c.flowType==='data_verification'?'selected':''}>データ不一致</option></select>
+        </div>
+      </div>
+      <div class="item-actions"><button class="btn-icon" onclick="removeCheckItem(${i})" title="削除">\u2716</button></div>
+    </div>
+  `).join('');
+}
+function readCheckItems() {
+  config.checkItems = [...document.querySelectorAll('#check-items-list .dyn-item')].map((el, i) => ({
+    id: i + 1,
+    name: el.querySelector('.ci-name').value,
+    flowType: el.querySelector('.ci-flow').value
+  }));
+}
+function addCheckItem() { readCheckItems(); const nid=config.checkItems.length+1; config.checkItems.push({id:nid,name:'',flowType:'document_check'}); renderCheckItems(); }
+function removeCheckItem(i) { readCheckItems(); config.checkItems.splice(i,1); config.checkItems.forEach((c,j)=>c.id=j+1); renderCheckItems(); }
+
+// --- Extraction Params (Data Items) ---
+function renderParams() {
+  const list = document.getElementById('params-list');
+  list.innerHTML = config.extractionParams.map((p, i) => `
+    <div class="dyn-item" data-idx="${i}">
+      <div class="item-id">${i + 1}</div>
+      <div class="item-content">
+        <div class="item-row">
+          <input type="text" class="ep-name" value="${esc(p.name)}" placeholder="項目名（英語）" style="max-width:180px">
+          <label class="checkbox-row"><input type="checkbox" class="ep-req" ${p.required ? 'checked' : ''}> 必須</label>
+        </div>
+        <textarea class="ep-desc" rows="2" placeholder="AIへの抽出指示（例：審査結果が承認なら completed、差戻しなら returned）">${esc(p.desc)}</textarea>
+      </div>
+      <div class="item-actions"><button class="btn-icon" onclick="removeParam(${i})" title="削除">\u2716</button></div>
+    </div>
+  `).join('');
+}
+function readParams() {
+  config.extractionParams = [...document.querySelectorAll('#params-list .dyn-item')].map(el => ({
+    name: el.querySelector('.ep-name').value,
+    desc: el.querySelector('.ep-desc').value,
+    required: el.querySelector('.ep-req').checked
+  }));
+}
+function addParam() { readParams(); config.extractionParams.push({name:'',desc:'',required:false}); renderParams(); }
+function removeParam(i) { readParams(); config.extractionParams.splice(i,1); renderParams(); }
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// =====================================================================
+// Step 3: DSL Generation
+// =====================================================================
+function generateDSLs() {
+  readConfigFromUI();
+
+  // Build return comments string for prompts
+  const rcStr = config.returnComments.map(c => `${c.id}:${c.text}`).join('\n');
+  const ciStr = config.checkItems.map(c => `${c.id}: "${c.name}"`).join('\n');
+  const dcIds = config.checkItems.filter(c=>c.flowType==='document_check').map(c=>c.id);
+  const dvIds = config.checkItems.filter(c=>c.flowType==='data_verification').map(c=>c.id);
+
+  // Build check criteria prompt section
+  const checkPromptItems = config.checkCriteria.map(c => `\u30FB${c.name}: ${c.rule}`).join('\n');
+
+  // --- judgment_tool DSL ---
+  const rcCategorized = buildCategorizedComments();
+  generatedDSLs['judgment_tool'] = {
+    filename: `BPaaS_${config.name}_判定ツール.yml`,
+    label: '判定ツール',
+    content: buildJudgmentDSL(rcCategorized)
+  };
+
+  // --- registration_tool DSL ---
+  generatedDSLs['registration_tool'] = {
+    filename: `BPaaS_${config.name}_結果登録ツール.yml`,
+    label: '結果登録ツール',
+    content: buildRegistrationDSL()
+  };
+
+  // --- check_tool DSL ---
+  generatedDSLs['check_tool'] = {
+    filename: `BPaaS_${config.name}_チェックツール.yml`,
+    label: 'チェックツール',
+    content: buildCheckToolDSL(rcStr, ciStr, dcIds, dvIds, checkPromptItems)
+  };
+
+  // --- orchestrator DSL ---
+  generatedDSLs['orchestrator'] = {
+    filename: `BPaaS_${config.name}_オーケストレータ.yml`,
+    label: 'オーケストレータ',
+    content: buildOrchestratorDSL()
+  };
+
+  renderPreview();
+}
+
+function buildCategorizedComments() {
+  // Group return comments by flowType for the judgment prompt
+  const lines = [];
+  config.returnComments.forEach(c => {
+    lines.push(`\u30FB${c.text}`);
+  });
+  return lines.join('\n');
+}
+
+// --- Judgment Tool DSL ---
+function buildJudgmentDSL(commentsText) {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_判定ツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: llm
+      id: start-llm
+      source: 'start_node'
+      sourceHandle: source
+      target: 'llm_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: end
+      id: llm-end
+      source: 'llm_node'
+      sourceHandle: source
+      target: 'end_node'
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - label: prompt
+          max_length: 50000
+          required: true
+          type: paragraph
+          variable: prompt
+      id: 'start_node'
+      type: custom
+    - data:
+        context:
+          enabled: false
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        prompt_template:
+        - id: judgment-prompt
+          role: system
+          text: >-
+            {{#start_node.prompt#}}は、${config.name}における確認結果レポートです。
+
+            下記の差戻しコメント一覧にあるコメントのいずれかに該当する場合は、該当する差戻しコメントを添えて差戻しとしてください。
+
+            **差戻しコメントはそのまま引用し、内容の要約や改変はしないでください。**
+
+            【差戻しコメント一覧】
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+
+            確認結果について、特段問題がなく、かつ差戻しコメント一覧の中に該当する差戻しコメントがない場合は承認としてください。
+
+            **差戻しコメント一覧に該当する差戻しコメントがない場合でも、書面の内容に問題がある旨の記載があれば差戻しとしてください。**
+
+            出力については、下記のフォーマットに従ってください。
+            **フォーマットは必ず守ってください**
+
+            ------------------------------------------------
+            ■ ツール実行結果
+            ・正常終了の場合は"SUCCESS"、異常終了の場合は"FAILED"を出力
+
+            ■ 書面審査結果
+            ・承認の場合は"承認"、差戻しの場合は"差戻し"
+
+            ・差戻しコメント(差戻しとなった場合にのみ出力)
+            ------------------------------------------------
+        title: LLM
+        type: llm
+        vision:
+          enabled: false
+      id: 'llm_node'
+      type: custom
+    - data:
+        outputs:
+        - value_selector:
+          - 'llm_node'
+          - text
+          value_type: string
+          variable: result
+        title: 終了
+        type: end
+      id: 'end_node'
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+// --- Registration Tool DSL ---
+function buildRegistrationDSL() {
+  const paramsYaml = config.extractionParams.map(p => `        - description: '${p.desc.replace(/'/g,"''")}'
+          name: ${p.name}
+          required: ${p.required}
+          type: string`).join('\n');
+
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_結果登録ツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: start
+        targetType: parameter-extractor
+      id: start-pe
+      source: 'start_node'
+      sourceHandle: source
+      target: 'pe_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: parameter-extractor
+        targetType: llm
+      id: pe-llm
+      source: 'pe_node'
+      sourceHandle: source
+      target: 'llm_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: llm
+        targetType: code
+      id: llm-code
+      source: 'llm_node'
+      sourceHandle: source
+      target: 'code_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: code
+        targetType: http-request
+      id: code-http
+      source: 'code_node'
+      sourceHandle: source
+      target: 'http_node'
+      targetHandle: target
+      type: custom
+    - data:
+        sourceType: http-request
+        targetType: end
+      id: http-end
+      source: 'http_node'
+      sourceHandle: source
+      target: 'end_node'
+      targetHandle: target
+      type: custom
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - label: prompt
+          max_length: 50000
+          required: true
+          type: paragraph
+          variable: prompt
+      id: 'start_node'
+      type: custom
+    - data:
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        parameters:
+${paramsYaml}
+        query:
+        - 'start_node'
+        - prompt
+        reasoning_mode: prompt
+        title: パラメータ抽出
+        type: parameter-extractor
+      id: 'pe_node'
+      type: custom
+    - data:
+        context:
+          enabled: false
+        model:
+          completion_params:
+            temperature: ${config.temperature}
+          mode: chat
+          name: ${config.model}
+          provider: ${config.provider}
+        prompt_template:
+        - id: meta-prompt
+          role: system
+          text: 'パラメータ抽出結果を参照して、メタデータJSONを生成してください。'
+        title: metadata生成
+        type: llm
+        vision:
+          enabled: false
+      id: 'llm_node'
+      type: custom
+    - data:
+        code: |
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          def main():
+              return {"now_datetime": str(datetime.now(ZoneInfo("Asia/Tokyo")))}
+        code_language: python3
+        outputs:
+          now_datetime:
+            type: string
+        title: 現在時刻取得
+        type: code
+      id: 'code_node'
+      type: custom
+    - data:
+        authorization:
+          type: no-auth
+        body:
+          type: json
+        method: ${config.apiMethod}
+        retry_config:
+          max_retries: 3
+          retry_enabled: true
+          retry_interval: 100
+        title: HTTPリクエスト
+        type: http-request
+        url: ${config.apiUrl}
+      id: 'http_node'
+      type: custom
+    - data:
+        outputs:
+        - value_selector:
+          - 'http_node'
+          - status_code
+          value_type: number
+          variable: result
+        title: 終了
+        type: end
+      id: 'end_node'
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+// --- Check Tool DSL ---
+function buildCheckToolDSL(rcStr, ciStr, dcIds, dvIds, checkPromptItems) {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_チェックツール
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: kalochin/pdf_process:1.0.0@052e5c10b080c86e949055c64575647737c2e14947b0b1bc87a44d1c6ed0f1de
+    version: null
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/azure_openai:0.0.36@c995a18ffe376b9995b88ad91930998b2b4f9f6e02ef6280895ff8a175e0cb8b
+    version: null
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: true
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+  graph:
+    edges:
+    - {id: e1, source: start, sourceHandle: source, target: pe, targetHandle: target, type: custom}
+    - {id: e2, source: pe, sourceHandle: source, target: http_get, targetHandle: target, type: custom}
+    - {id: e3, source: http_get, sourceHandle: source, target: pdf_tool, targetHandle: target, type: custom}
+    - {id: e4, source: pdf_tool, sourceHandle: source, target: llm_check, targetHandle: target, type: custom}
+    - {id: e5, source: llm_check, sourceHandle: source, target: llm_rc, targetHandle: target, type: custom}
+    - {id: e6, source: llm_rc, sourceHandle: source, target: llm_ci, targetHandle: target, type: custom}
+    - {id: e7, source: llm_ci, sourceHandle: source, target: code_merge, targetHandle: target, type: custom}
+    - {id: e8, source: code_merge, sourceHandle: source, target: end_ok, targetHandle: target, type: custom}
+    - {id: e9, source: http_get, sourceHandle: fail-branch, target: llm_notfound, targetHandle: target, type: custom}
+    - {id: e10, source: llm_notfound, sourceHandle: source, target: llm_rc2, targetHandle: target, type: custom}
+    - {id: e11, source: llm_rc2, sourceHandle: source, target: llm_ci2, targetHandle: target, type: custom}
+    - {id: e12, source: llm_ci2, sourceHandle: source, target: code_merge2, targetHandle: target, type: custom}
+    - {id: e13, source: code_merge2, sourceHandle: source, target: end_fail, targetHandle: target, type: custom}
+    nodes:
+    - {id: start, data: {title: 開始, type: start, variables: [{label: prompt, max_length: 50000, type: paragraph, variable: prompt}]}}
+    - id: pe
+      data:
+        instruction: '入力データを参照し、署名付きURLを抜き出してください。'
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        parameters:
+        - {name: presigned_url, type: string, required: false, description: URL}
+        query: [start, prompt]
+        reasoning_mode: prompt
+        title: パラメータ抽出
+        type: parameter-extractor
+    - id: http_get
+      data:
+        method: get
+        url: '{{#pe.presigned_url#}}'
+        error_strategy: fail-branch
+        retry_config: {max_retries: 3, retry_enabled: true, retry_interval: 100}
+        title: HTTPリクエスト
+        type: http-request
+    - id: pdf_tool
+      data:
+        title: PDF to PNG
+        type: tool
+        tool_name: pdf_to_png
+        provider_name: kalochin/pdf_process/pdf_process
+    - id: llm_check
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            入力データと書面画像を突合して下記の観点でチェックしてください。
+
+${config.checkCriteria.map(c => '            ' + c.name + ': ' + c.rule.replace(/\n/g, ' ')).join('\n')}
+
+            確認結果は下記のフォーマットで出力してください。
+            ---------------------------------------------------------
+            ■ ツール実行結果
+            ・正常終了の場合は"SUCCESS"、異常終了の場合は"FAILED"を出力
+            ■ チェック結果
+            各項目を箇条書きにして、比較した値を明示したうえで相違の有無を出力してください。
+        title: 書面チェック
+        type: llm
+        vision: {enabled: true}
+    - id: llm_rc
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果から差戻しコメントIDを判定してください。
+
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+
+            フロー種別: document_check=[${dcIds.join(',')}] / data_verification=[${dvIds.join(',')}]
+        title: 差戻しコメントID判定
+        type: llm
+    - id: llm_ci
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, completion_params: {temperature: ${config.temperature}}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果からチェック項目IDを判定してください。
+
+${config.checkItems.map(c => '            ' + c.id + ': "' + c.name + '"').join('\n')}
+
+            フロー種別: document_check=[${dcIds.join(',')}] / data_verification=[${dvIds.join(',')}]
+        title: チェック項目ID判定
+        type: llm
+    - id: code_merge
+      data:
+        code: |
+          def main(a: str, b: str, c: str):
+              return {"result": a + b + c}
+        code_language: python3
+        outputs: {result: {type: string}}
+        title: 結果結合
+        type: code
+    - {id: end_ok, data: {title: 終了, type: end, outputs: [{value_selector: [code_merge, result], value_type: string, variable: result}]}}
+    - id: llm_notfound
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - {role: system, text: '■ ツール実行結果\\nSUCCESS\\n■ チェック結果\\n書類未添付'}
+        title: 書面未添付
+        type: llm
+    - id: llm_rc2
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果から差戻しコメントIDを判定してください。
+
+${config.returnComments.map(c => '            ' + c.id + ':' + c.text).join('\n')}
+        title: 差戻しコメントID判定
+        type: llm
+    - id: llm_ci2
+      data:
+        model: {name: ${config.model}, provider: ${config.provider}, mode: chat}
+        prompt_template:
+        - role: system
+          text: >-
+            チェック結果からチェック項目IDを判定してください。
+
+${config.checkItems.map(c => '            ' + c.id + ': "' + c.name + '"').join('\n')}
+        title: チェック項目ID判定
+        type: llm
+    - id: code_merge2
+      data:
+        code: |
+          def main(a: str, b: str, c: str):
+              return {"result": a + b + c}
+        code_language: python3
+        outputs: {result: {type: string}}
+        title: 結果結合
+        type: code
+    - {id: end_fail, data: {title: 終了, type: end, outputs: [{value_selector: [code_merge2, result], value_type: string, variable: result}]}}
+  rag_pipeline_variables: []`;
+}
+
+// --- Orchestrator DSL ---
+function buildOrchestratorDSL() {
+  return `app:
+  description: ''
+  icon: "\\U0001F916"
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: BPaaS_${config.name}_オーケストレータ
+  use_icon_as_answer_icon: false
+dependencies: []
+kind: app
+version: 0.5.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      enabled: false
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+  graph:
+    edges:
+    - {id: e1, source: start, sourceHandle: source, target: agent, targetHandle: target, type: custom}
+    - {id: e2, source: agent, sourceHandle: source, target: end, targetHandle: target, type: custom}
+    nodes:
+    - data:
+        title: 開始
+        type: start
+        variables:
+        - {label: プロンプト, max_length: 500000, required: true, type: paragraph, variable: prompt}
+      id: start
+      type: custom
+    - data:
+        agent_parameters:
+          instruction:
+            type: constant
+            value: >-
+              あなたは${config.name}を遂行するために、必要なツールを実行する役割を担っています。
+
+              用意しているツールの一覧:
+              ①: チェックツール - 書面の不備がないかチェックする
+              ②: 判定ツール - チェック結果から承認/差戻しを判定する
+              ③: 結果登録ツール - 処理結果をデータベースに登録する
+
+              基本的には①→②→③の順番で実行します。
+          maximum_iterations:
+            type: constant
+            value: 30
+          model:
+            type: constant
+            value:
+              mode: chat
+              model: ${config.model}
+              provider: ${config.provider}
+              type: model-selector
+          query:
+            type: constant
+            value: >-
+              必要なツールを順番に実行してください。
+              最終的な結果出力:
+              ■ オーケストレータ処理結果 (SUCCESS/FAILED)
+              ■ チェック結果
+              ■ 審査結果 (承認/差戻し)
+          tools:
+            type: constant
+            value:
+            - enabled: true
+              provider_name: REPLACE_WITH_CHECK_TOOL_UUID
+              provider_show_name: チェックツール
+              tool_label: チェックツール
+              tool_name: check_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+            - enabled: true
+              provider_name: REPLACE_WITH_JUDGMENT_TOOL_UUID
+              provider_show_name: 判定ツール
+              tool_label: 判定ツール
+              tool_name: judgment_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+            - enabled: true
+              provider_name: REPLACE_WITH_REGISTRATION_TOOL_UUID
+              provider_show_name: 結果登録ツール
+              tool_label: 結果登録ツール
+              tool_name: registration_tool
+              type: workflow
+              schemas:
+              - {name: prompt, type: string, required: true, form: llm}
+        agent_strategy_label: ReAct
+        agent_strategy_name: ReAct
+        agent_strategy_provider_name: langgenius/agent/agent
+        title: エージェント
+        type: agent
+      id: agent
+      type: custom
+    - data:
+        outputs:
+        - {value_selector: [agent, text], value_type: string, variable: result}
+        title: 終了
+        type: end
+      id: end
+      type: custom
+  rag_pipeline_variables: []`;
+}
+
+// =====================================================================
+// Preview & Download
+// =====================================================================
+function renderPreview() {
+  const tabs = document.getElementById('preview-tabs');
+  const btns = document.getElementById('download-btns');
+  const keys = Object.keys(generatedDSLs);
+  tabs.innerHTML = keys.map((k, i) => `<button class="preview-tab ${i===0?'active':''}" data-key="${k}">${generatedDSLs[k].label}</button>`).join('');
+  btns.innerHTML = keys.map(k => `<button class="btn btn-secondary btn-sm" onclick="downloadOne('${k}')">\u2B07 ${generatedDSLs[k].label}</button>`).join('');
+  tabs.querySelectorAll('.preview-tab').forEach(t => t.addEventListener('click', () => {
+    tabs.querySelectorAll('.preview-tab').forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+    showPreview(t.dataset.key);
+  }));
+  showPreview(keys[0]);
+}
+
+function showPreview(key) {
+  const area = document.getElementById('preview-area');
+  area.textContent = generatedDSLs[key].content;
+}
+
+function downloadOne(key) {
+  const dsl = generatedDSLs[key];
+  const blob = new Blob([dsl.content], {type: 'application/x-yaml'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = dsl.filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadAll() {
+  Object.keys(generatedDSLs).forEach(k => downloadOne(k));
+}
+
+// =====================================================================
+// Init
+// =====================================================================
+renderCategories();
+</script>
+</body>
+</html>
